@@ -15,16 +15,16 @@ abstract class TestCase extends BaseTestCase
         config([
             'database.default' => 'sqlite',
             'database.connections.sqlite.database' => ':memory:',
-            'logging.default' => 'errorlog',
-            'logging.channels.auth.driver' => 'errorlog',
-            'logging.channels.dashboard.driver' => 'errorlog',
-            'logging.channels.expense.driver' => 'errorlog',
-            'logging.channels.category.driver' => 'errorlog',
-            'logging.channels.source.driver' => 'errorlog',
-            'logging.channels.xlsx.driver' => 'errorlog',
-            'logging.channels.import.driver' => 'errorlog',
-            'logging.channels.export.driver' => 'errorlog',
-            'logging.channels.mail.driver' => 'errorlog',
+            'logging.default' => 'null',
+            'logging.channels.auth.driver' => 'null',
+            'logging.channels.dashboard.driver' => 'null',
+            'logging.channels.expense.driver' => 'null',
+            'logging.channels.category.driver' => 'null',
+            'logging.channels.source.driver' => 'null',
+            'logging.channels.xlsx.driver' => 'null',
+            'logging.channels.import.driver' => 'null',
+            'logging.channels.export.driver' => 'null',
+            'logging.channels.mail.driver' => 'null',
         ]);
 
         $this->artisan('migrate');
