@@ -28,8 +28,7 @@
         "pestphp/pest": "^4.1",
         "pestphp/pest-plugin-laravel": "^4.0",
         "phpstan/phpstan": "^2.1",
-        "rector/rector": "^2.4",
-        "squizlabs/php_codesniffer": "^3.9"
+        "rector/rector": "^2.4"
     },
     "autoload": {
         "psr-4": {
@@ -78,11 +77,39 @@
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
-        "lint:static": [
+        "lint:all:fix": [
+            "@lint:rector:fix",
+            "@lint:pint:fix",
+            "@lint:all:check"
+        ],
+        "lint:all:check": [
+            "@lint:rector:check",
+            "@lint:pint:check",
+            "@lint:phpstan"
+        ],
+        "lint:rector:fix": [
+            "./vendor/bin/rector"
+        ],
+        "lint:rector:check": [
+            "./vendor/bin/rector --dry-run"
+        ],
+        "lint:pint:fix": [
+            "./vendor/bin/pint"
+        ],
+        "lint:pint:check": [
+            "./vendor/bin/pint --test"
+        ],
+        "lint:phpstan": [
             "./vendor/bin/phpstan analyse -c phpstan.neon"
         ],
+        "lint:fix": [
+            "@lint:all:fix"
+        ],
+        "lint:static": [
+            "@lint:phpstan"
+        ],
         "lint:style:fix": [
-            "./vendor/bin/pint"
+            "@lint:pint:fix"
         ]
     },
     "extra": {
