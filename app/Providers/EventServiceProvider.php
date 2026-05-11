@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\UserRegistered;
+use App\Listeners\SendWelcomeMail;
 use Illuminate\Support\ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
 {
     /** @var array<class-string, list<class-string>> */
     protected $listen = [
-        \App\Events\UserRegistered::class => [
-            \App\Listeners\SendWelcomeMail::class,
+        UserRegistered::class => [
+            SendWelcomeMail::class,
         ],
     ];
 

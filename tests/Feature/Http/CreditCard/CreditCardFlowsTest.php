@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Category;
 use App\Models\CreditCardStatement;
 use App\Models\Expense;
 use App\Models\Source;
@@ -38,7 +39,7 @@ test('deve criar um cartão de crédito com limite e ciclo de fatura', function 
 test('deve gerar parcelas e faturas corretas para compra parcelada no cartão', function () {
     $user = User::factory()->create();
     $token = $user->createToken('test')->plainTextToken;
-    $categoryId = \App\Models\Category::factory()->create(['user_id' => $user->id])->id;
+    $categoryId = Category::factory()->create(['user_id' => $user->id])->id;
     $creditCard = Source::factory()->creditCard()->create([
         'user_id' => $user->id,
         'name' => 'Mastercard',

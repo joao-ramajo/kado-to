@@ -78,6 +78,9 @@
         ],
         "stan": [
             "docker exec -it filament-wallet-laravel.test-1 ./vendor/bin/phpstan analyse -c phpstan.neon"
+        ],
+        "lint:style:fix": [
+            "./vendor/bin/pint"
         ]
     },
     "extra": {
