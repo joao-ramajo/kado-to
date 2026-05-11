@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('source_id')->constrained()->onDelete('cascade')->after('category_id')->nullable();
         });
     }
+
     public function down(): void
     {
         Schema::table('expenses', function (Blueprint $table) {

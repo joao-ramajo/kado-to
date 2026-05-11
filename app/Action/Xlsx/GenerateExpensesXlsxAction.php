@@ -20,8 +20,7 @@ class GenerateExpensesXlsxAction
         private readonly ExpensesListSheet $expensesListSheet,
         private readonly SourcesSummarySheet $sourcesSummarySheet,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(GenerateExpensesXlsxInput $input): GenerateExpensesXlsxOutput
     {
@@ -29,7 +28,7 @@ class GenerateExpensesXlsxAction
             'user_id' => $input->userId,
         ]);
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $this->expensesListSheet->addTo($spreadsheet);
         $this->sourcesSummarySheet->addTo($spreadsheet);
 

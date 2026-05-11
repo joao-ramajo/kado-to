@@ -13,8 +13,7 @@ class CreateExpenseController
 {
     public function __construct(
         protected readonly CreateExpense $createExpense
-    ) {
-    }
+    ) {}
 
     public function __invoke(CreateExpenseRequest $request)
     {
@@ -26,7 +25,7 @@ class CreateExpenseController
             $this->createExpense->execute($data);
 
             return response()->json([
-                'message' => 'Movimentação registrada com sucesso.'
+                'message' => 'Movimentação registrada com sucesso.',
             ], 201);
         } catch (DomainException $exception) {
             return response()->json([

@@ -14,8 +14,7 @@ class PayCreditCardStatementController extends Controller
 {
     public function __construct(
         private readonly PayCreditCardStatementAction $payCreditCardStatementAction,
-    ) {
-    }
+    ) {}
 
     public function __invoke(PayCreditCardStatementRequest $request, int $statementId)
     {

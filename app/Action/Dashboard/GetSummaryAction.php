@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Action\Dashboard;
 
-use App\Models\CreditCardStatement;
 use App\DTO\Dashboard\GetSummaryInput;
 use App\DTO\Dashboard\GetSummaryOutput;
+use App\Models\CreditCardStatement;
 use App\Models\Expense;
 use App\Models\Source;
 use App\Support\Logging\FormatsLogMessage;
@@ -18,8 +18,7 @@ class GetSummaryAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(GetSummaryInput $input): GetSummaryOutput
     {

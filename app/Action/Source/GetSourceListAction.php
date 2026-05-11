@@ -16,8 +16,7 @@ class GetSourceListAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(GetSourceListInput $input): GetSourceListOutput
     {

@@ -10,6 +10,5 @@ readonly class WebRegisterInput
         public string $name,
         public string $email,
         public string $password,
-    ) {
-    }
+    ) {}
 }

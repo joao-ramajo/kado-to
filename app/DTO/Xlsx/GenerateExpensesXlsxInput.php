@@ -8,6 +8,5 @@ readonly class GenerateExpensesXlsxInput
 {
     public function __construct(
         public int $userId,
-    ) {
-    }
+    ) {}
 }

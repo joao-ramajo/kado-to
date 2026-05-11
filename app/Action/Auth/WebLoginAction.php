@@ -16,8 +16,7 @@ class WebLoginAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(WebLoginInput $input): WebLoginOutput
     {
@@ -31,7 +30,7 @@ class WebLoginAction
             'password' => $input->password,
         ], $input->remember);
 
-        if (!$success) {
+        if (! $success) {
             $this->logger->warning($this->formatLogMessage('failed'), [
                 'email' => $input->email,
             ]);

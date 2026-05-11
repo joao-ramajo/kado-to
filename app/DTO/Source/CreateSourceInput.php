@@ -15,6 +15,5 @@ readonly class CreateSourceInput
         public ?int $creditLimit,
         public ?int $statementClosingDay,
         public ?int $statementDueDay,
-    ) {
-    }
+    ) {}
 }

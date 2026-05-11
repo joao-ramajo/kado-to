@@ -18,6 +18,6 @@ test('usuário pode deletar uma despesa', function () {
     $response->assertStatus(200);
 
     $this->assertDatabaseMissing('expenses', [
-        'id' => $expense->id
+        'id' => $expense->id,
     ]);
 });

@@ -8,6 +8,5 @@ readonly class WebLogoutOutput
 {
     public function __construct(
         public bool $success,
-    ) {
-    }
+    ) {}
 }

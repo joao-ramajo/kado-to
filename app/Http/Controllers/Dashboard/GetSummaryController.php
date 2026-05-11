@@ -18,8 +18,7 @@ class GetSummaryController extends Controller
     public function __construct(
         private readonly GetSummaryAction $getSummaryAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke()
     {

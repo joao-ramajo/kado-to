@@ -8,6 +8,5 @@ readonly class WebLogoutInput
 {
     public function __construct(
         public int $userId,
-    ) {
-    }
+    ) {}
 }

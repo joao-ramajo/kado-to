@@ -13,8 +13,7 @@ class DeleteExpenseController extends Controller
 {
     public function __construct(
         protected readonly DeleteExpenseAction $deleteExpenseAction
-    ) {
-    }
+    ) {}
 
     public function __invoke(string $id)
     {
@@ -28,12 +27,12 @@ class DeleteExpenseController extends Controller
 
             return response()
                 ->json([
-                    'message' => 'Despesa deletada com sucesso.'
+                    'message' => 'Despesa deletada com sucesso.',
                 ], 200);
         } catch (DomainException $e) {
             return response()
                 ->json([
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 400);
         }
     }

@@ -21,9 +21,10 @@ return new class extends Migration
         // Drop tabela inteira
         Schema::dropIfExists('bank_accounts');
     }
+
     public function down(): void
     {
-             // Recria tabela
+        // Recria tabela
         Schema::create('bank_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('name');

@@ -19,8 +19,7 @@ class GetSourceListController extends Controller
     public function __construct(
         private readonly GetSourceListAction $getSourceListAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke(Request $request)
     {

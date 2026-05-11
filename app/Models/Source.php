@@ -31,6 +31,7 @@ class Source extends Model
     use HasFactory;
 
     public const TYPE_CASH_LIKE = 'cash_like';
+
     public const TYPE_CREDIT_CARD = 'credit_card';
 
     /** @var list<string> */

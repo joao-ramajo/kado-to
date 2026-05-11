@@ -17,8 +17,7 @@ class CreateExpense
 {
     public function __construct(
         private readonly CreditCardStatementService $creditCardStatementService,
-    ) {
-    }
+    ) {}
 
     public function execute(array $data): void
     {

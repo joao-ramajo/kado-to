@@ -8,21 +8,27 @@ use App\Domain\Interfaces\XlsxSheet;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class ExpensesListSheet implements XlsxSheet
 {
     private const HEADER_RANGE = 'A1:G1';
+
     private const HEADER_ROW_HEIGHT = 32;
+
     private const DATA_ROW_HEIGHT = 22;
+
     private const TABLE_BORDER_COLOR = 'D1D5DB';
+
     private const HEADER_BG = 'F3F4F6';
+
     private const HEADER_FONT = '111827';
+
     private const STRIPE_BG = 'F9FAFB';
 
     public function addTo(Spreadsheet $spreadsheet): void
@@ -313,7 +319,7 @@ class ExpensesListSheet implements XlsxSheet
             'Categoria',
             'Tipo',
             'Fonte',
-            'Data de Pagamento'
+            'Data de Pagamento',
         ];
     }
 
@@ -355,12 +361,13 @@ class ExpensesListSheet implements XlsxSheet
     private function normalizeMoney(int|string $amount): float
     {
         $cents = (int) $amount;
+
         return $cents / 100;
     }
 
-    private function toExcelDate(?string $date): float|null
+    private function toExcelDate(?string $date): ?float
     {
-        if (!$date) {
+        if (! $date) {
             return null;
         }
 

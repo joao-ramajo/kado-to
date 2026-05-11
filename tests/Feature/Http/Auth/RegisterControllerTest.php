@@ -20,7 +20,7 @@ test('cria uma conta de usuário com sucesso e retorna seu nome e token', functi
     ]);
 
     $this->assertDatabaseHas('users', [
-        'email' => 'john.doe@gmail.com'
+        'email' => 'john.doe@gmail.com',
     ]);
 
     $id = User::where('email', 'john.doe@gmail.com')->first()->id;

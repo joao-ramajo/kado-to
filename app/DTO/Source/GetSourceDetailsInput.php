@@ -8,6 +8,5 @@ readonly class GetSourceDetailsInput
 {
     public function __construct(
         public int $userId,
-    ) {
-    }
+    ) {}
 }

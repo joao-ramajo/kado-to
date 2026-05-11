@@ -9,7 +9,7 @@ test('usuário autenticado cria uma despesa para uma fonte especificada com suce
     $user = User::factory()->create();
 
     $source = Source::factory()->create([
-        'user_id' => $user->id
+        'user_id' => $user->id,
     ]);
     $token = $user->createToken('test')->plainTextToken;
 
@@ -19,9 +19,8 @@ test('usuário autenticado cria uma despesa para uma fonte especificada com suce
             'amount' => 120000,
             'type' => 'expense',
             'status' => 'pending',
-            'source_id' => $source->id
+            'source_id' => $source->id,
         ]);
-
 
     $response->assertStatus(201);
 
@@ -42,9 +41,8 @@ test('usuário autenticado cria uma despesa sem especificar a fonte e a despesa 
             'amount' => 120000,
             'type' => 'expense',
             'status' => 'pending',
-            'source_id' => null
+            'source_id' => null,
         ]);
-
 
     $response->assertStatus(201);
 

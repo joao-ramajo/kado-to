@@ -17,8 +17,7 @@ class CreateCategoryAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(CreateCategoryInput $input): CreateCategoryOutput
     {

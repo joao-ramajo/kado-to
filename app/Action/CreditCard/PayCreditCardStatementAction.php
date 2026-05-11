@@ -15,8 +15,7 @@ class PayCreditCardStatementAction
 {
     public function __construct(
         private readonly CreditCardStatementService $creditCardStatementService,
-    ) {
-    }
+    ) {}
 
     public function execute(int $statementId, int $userId, int $paymentSourceId): void
     {

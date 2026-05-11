@@ -17,8 +17,7 @@ class MarkExpenseAsPaidAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(MarkExpenseAsPaidInput $input): MarkExpenseAsPaidOutput
     {
@@ -29,7 +28,7 @@ class MarkExpenseAsPaidAction
 
         $expense = Expense::find($input->expenseId);
 
-        if (!$expense || $expense->user_id !== $input->userId) {
+        if (! $expense || $expense->user_id !== $input->userId) {
             $this->logger->warning($this->formatLogMessage('expense not found for user'), [
                 'user_id' => $input->userId,
                 'expense_id' => $input->expenseId,
@@ -37,7 +36,7 @@ class MarkExpenseAsPaidAction
             throw new DomainException('Despesa não encontrada.');
         }
 
-        if (!in_array($expense->status, ['pending', 'overdue'], true)) {
+        if (! in_array($expense->status, ['pending', 'overdue'], true)) {
             $this->logger->warning($this->formatLogMessage('invalid status transition'), [
                 'user_id' => $input->userId,
                 'expense_id' => $input->expenseId,

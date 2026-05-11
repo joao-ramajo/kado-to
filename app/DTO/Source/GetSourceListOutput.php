@@ -8,8 +8,7 @@ readonly class GetSourceListOutput
 {
     public function __construct(
         public array $sources,
-    ) {
-    }
+    ) {}
 
     public function toArray(): array
     {

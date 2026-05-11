@@ -18,8 +18,7 @@ class GetSourceDetailsController extends Controller
     public function __construct(
         private readonly GetSourceDetailsAction $getSourceDetailsAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke()
     {

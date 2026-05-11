@@ -15,8 +15,7 @@ class UpdateCategoryController extends Controller
 {
     public function __construct(
         private readonly UpdateCategoryAction $updateCategoryAction,
-    ) {
-    }
+    ) {}
 
     public function __invoke(UpdateCategoryRequest $request, int $id)
     {

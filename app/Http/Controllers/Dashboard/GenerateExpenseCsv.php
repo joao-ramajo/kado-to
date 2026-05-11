@@ -10,8 +10,7 @@ class GenerateExpenseCsv
 {
     public function __construct(
         protected readonly CsvExportStrategy $csvExport
-    ) {
-    }
+    ) {}
 
     public function __invoke()
     {

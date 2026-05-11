@@ -6,7 +6,7 @@ use App\Models\User;
 
 test('usuário consegue fazer login', function () {
     $user = User::factory()->create([
-        'password' => bcrypt('password')
+        'password' => bcrypt('password'),
     ]);
 
     $response = $this->postJson(route('api.login', [
@@ -18,6 +18,6 @@ test('usuário consegue fazer login', function () {
         ->assertJsonStructure([
             'message',
             'user',
-            'token'
+            'token',
         ]);
 });

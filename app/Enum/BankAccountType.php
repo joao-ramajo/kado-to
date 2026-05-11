@@ -14,8 +14,8 @@ enum BankAccountType: string
     {
         return match ($this) {
             self::Checking => 'Conta Corrente',
-            self::Savings  => 'Conta Poupança',
-            self::Credit   => 'Cartão de Crédito',
+            self::Savings => 'Conta Poupança',
+            self::Credit => 'Cartão de Crédito',
         };
     }
 
@@ -23,8 +23,8 @@ enum BankAccountType: string
     {
         return match ($this) {
             self::Checking => 'Conta usada no dia a dia para pagamentos e recebimentos',
-            self::Savings  => 'Conta destinada a guardar dinheiro e rendimentos',
-            self::Credit   => 'Cartão de crédito com fatura e limite',
+            self::Savings => 'Conta destinada a guardar dinheiro e rendimentos',
+            self::Credit => 'Cartão de crédito com fatura e limite',
         };
     }
 }

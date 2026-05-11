@@ -16,8 +16,7 @@ class CreateSourceAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(CreateSourceInput $input): CreateSourceOutput
     {

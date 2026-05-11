@@ -12,8 +12,7 @@ class ImportExpenseCsvController extends Controller
 {
     public function __construct(
         protected readonly ImportCsvData $importCsvDataAction
-    ) {
-    }
+    ) {}
 
     public function __invoke(Request $request)
     {
@@ -23,7 +22,7 @@ class ImportExpenseCsvController extends Controller
 
         return response()
             ->json([
-                'message' => 'Despesas importadas com sucesso.'
+                'message' => 'Despesas importadas com sucesso.',
             ]);
     }
 }

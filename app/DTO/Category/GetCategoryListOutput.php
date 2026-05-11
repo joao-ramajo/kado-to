@@ -8,8 +8,7 @@ readonly class GetCategoryListOutput
 {
     public function __construct(
         public array $categories,
-    ) {
-    }
+    ) {}
 
     public function toArray(): array
     {

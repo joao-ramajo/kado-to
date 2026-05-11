@@ -8,17 +8,19 @@ use App\Domain\Interfaces\XlsxSheet;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SourcesSummarySheet implements XlsxSheet
 {
     private const HEADER_BG = 'F3F4F6';
+
     private const HEADER_FONT = '111827';
+
     private const TABLE_BORDER_COLOR = 'D1D5DB';
+
     private const STRIPE_BG = 'F9FAFB';
 
     public function addTo(Spreadsheet $spreadsheet): void
@@ -52,7 +54,7 @@ class SourcesSummarySheet implements XlsxSheet
     private function setupHeaders(Worksheet $sheet): void
     {
         $sheet->fromArray([
-            ['Fonte', 'Total Recebido', 'Total Gasto', 'Saldo']
+            ['Fonte', 'Total Recebido', 'Total Gasto', 'Saldo'],
         ], null, 'A1');
     }
 
@@ -92,24 +94,23 @@ class SourcesSummarySheet implements XlsxSheet
             $totalExpense += $expense;
 
             return [
-            $row->source ?? '—',
-            $this->normalizeMoney($income),
-            $this->normalizeMoney($expense),
-            $this->normalizeMoney($income - $expense),
+                $row->source ?? '—',
+                $this->normalizeMoney($income),
+                $this->normalizeMoney($expense),
+                $this->normalizeMoney($income - $expense),
             ];
         }, $values);
 
         // Linha de total
         $rows[] = [
-        'TOTAL',
-        $this->normalizeMoney($totalIncome),
-        $this->normalizeMoney($totalExpense),
-        $this->normalizeMoney($totalIncome - $totalExpense),
+            'TOTAL',
+            $this->normalizeMoney($totalIncome),
+            $this->normalizeMoney($totalExpense),
+            $this->normalizeMoney($totalIncome - $totalExpense),
         ];
 
         return $rows;
     }
-
 
     private function applyHeaderStyles(Worksheet $sheet): void
     {

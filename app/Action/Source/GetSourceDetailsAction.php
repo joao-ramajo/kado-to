@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Action\Source;
 
-use App\Models\CreditCardStatement;
 use App\DTO\Source\GetSourceDetailsInput;
 use App\DTO\Source\GetSourceDetailsOutput;
+use App\Models\CreditCardStatement;
 use App\Models\Expense;
 use App\Models\Source;
 use App\Support\CreditCard\CreditCardStatementService;
@@ -20,8 +20,7 @@ class GetSourceDetailsAction
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly CreditCardStatementService $creditCardStatementService,
-    ) {
-    }
+    ) {}
 
     public function execute(GetSourceDetailsInput $input): GetSourceDetailsOutput
     {

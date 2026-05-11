@@ -19,8 +19,7 @@ class GetExpensesController extends Controller
     public function __construct(
         private readonly GetExpensesAction $getExpensesAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke(GetExpensesRequest $request)
     {

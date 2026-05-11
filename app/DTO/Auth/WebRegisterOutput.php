@@ -10,6 +10,5 @@ readonly class WebRegisterOutput
 {
     public function __construct(
         public User $user,
-    ) {
-    }
+    ) {}
 }

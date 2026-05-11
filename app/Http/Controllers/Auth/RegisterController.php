@@ -5,26 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Action\Auth\RegisterUserAction;
-use App\Domain\Exceptions\AuthException;
-use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use DomainException;
 
 class RegisterController extends Controller
 {
     public function __construct(
         protected readonly RegisterUserAction $registerUserAction
-    ) {
-    }
+    ) {}
 
     public function __invoke(RegisterRequest $request)
     {
         try {
             $data = $request->validated();
-
 
             $result = $this->registerUserAction->execute($data);
 
@@ -38,7 +32,7 @@ class RegisterController extends Controller
         } catch (DomainException $e) {
             return response()
                 ->json([
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 400);
         }
     }

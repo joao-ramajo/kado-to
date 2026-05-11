@@ -8,8 +8,7 @@ readonly class MarkExpenseAsPaidOutput
 {
     public function __construct(
         public string $message,
-    ) {
-    }
+    ) {}
 
     public function toArray(): array
     {

@@ -29,12 +29,10 @@ use App\Http\Controllers\User\CreateSourceController;
 use App\Http\Controllers\User\GetSourceDetailsController;
 use App\Http\Controllers\User\GetSourceListController;
 use App\Jobs\User\SendWelcomeMailJob;
-use App\Models\Expense;
 use App\Strategy\CsvExportStrategy;
-use App\Observers\ExpenseObserver;
 use Illuminate\Log\LogManager;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 use Psr\Log\LoggerInterface;
 
 class AppServiceProvider extends ServiceProvider

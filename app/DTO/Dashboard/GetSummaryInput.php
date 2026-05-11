@@ -9,6 +9,5 @@ readonly class GetSummaryInput
     public function __construct(
         public int $userId,
         public ?int $defaultSourceId,
-    ) {
-    }
+    ) {}
 }

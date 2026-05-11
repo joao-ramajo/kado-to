@@ -8,6 +8,5 @@ readonly class GetSourceListInput
 {
     public function __construct(
         public int $userId,
-    ) {
-    }
+    ) {}
 }

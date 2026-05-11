@@ -17,8 +17,7 @@ class UpdateCategoryAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(UpdateCategoryInput $input): UpdateCategoryOutput
     {

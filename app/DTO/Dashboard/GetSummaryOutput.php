@@ -12,8 +12,7 @@ readonly class GetSummaryOutput
         public int $expectedTotal,
         public int $creditCardOpenTotal,
         public int $creditCardLimitUsed,
-    ) {
-    }
+    ) {}
 
     public function toArray(): array
     {

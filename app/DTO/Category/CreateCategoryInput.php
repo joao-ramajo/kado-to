@@ -10,6 +10,5 @@ readonly class CreateCategoryInput
         public int $userId,
         public string $name,
         public string $color,
-    ) {
-    }
+    ) {}
 }

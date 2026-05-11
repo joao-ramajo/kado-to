@@ -14,6 +14,7 @@ return new class extends Migration
             $table->date('due_date')->nullable()->after('payment_date');
         });
     }
+
     public function down(): void
     {
         Schema::table('expenses', function (Blueprint $table) {

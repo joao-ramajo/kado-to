@@ -10,6 +10,5 @@ readonly class WebLoginInput
         public string $email,
         public string $password,
         public bool $remember,
-    ) {
-    }
+    ) {}
 }

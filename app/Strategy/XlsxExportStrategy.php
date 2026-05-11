@@ -7,12 +7,10 @@ namespace App\Strategy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class XlsxExportStrategy
@@ -23,10 +21,10 @@ class XlsxExportStrategy
 
         $name = Str::slug($user->name);
 
-        $fileName = "{$name}-fillament-wallet-" . Str::uuid() . '.xlsx';
+        $fileName = "{$name}-fillament-wallet-".Str::uuid().'.xlsx';
 
         $callback = function () use ($user) {
-            $spreadsheet = new Spreadsheet();
+            $spreadsheet = new Spreadsheet;
             $sheet = $spreadsheet->getActiveSheet();
 
             $headerStyle = [
@@ -53,7 +51,7 @@ class XlsxExportStrategy
                 'DATA VENCIMENTO',
                 'CRIADO EM',
                 'CATEGORIA',
-                'CONTA'
+                'CONTA',
             ];
 
             $sheet->fromArray([$headers], null, 'A1');
@@ -81,14 +79,14 @@ class XlsxExportStrategy
                 ->orderBy('expenses.created_at', 'desc')
                 ->chunk(1000, function ($expenses) use ($sheet, &$row) {
                     foreach ($expenses as $expense) {
-                        $sheet->setCellValue('A' . $row, $expense->title ?? '-');
-                        $sheet->setCellValue('B' . $row, $expense->amount);
-                        $sheet->setCellValue('C' . $row, $expense->status ?? '-');
-                        $sheet->setCellValue('D' . $row, $expense->payment_date ?? '-');
-                        $sheet->setCellValue('E' . $row, $expense->due_date ?? '-');
-                        $sheet->setCellValue('F' . $row, $expense->created_at ?? '-');
-                        $sheet->setCellValue('G' . $row, $expense->category_name ?? '-');
-                        $sheet->setCellValue('H' . $row, $expense->bank_account_name ?? '-');
+                        $sheet->setCellValue('A'.$row, $expense->title ?? '-');
+                        $sheet->setCellValue('B'.$row, $expense->amount);
+                        $sheet->setCellValue('C'.$row, $expense->status ?? '-');
+                        $sheet->setCellValue('D'.$row, $expense->payment_date ?? '-');
+                        $sheet->setCellValue('E'.$row, $expense->due_date ?? '-');
+                        $sheet->setCellValue('F'.$row, $expense->created_at ?? '-');
+                        $sheet->setCellValue('G'.$row, $expense->category_name ?? '-');
+                        $sheet->setCellValue('H'.$row, $expense->bank_account_name ?? '-');
                         $row++;
                     }
                 });

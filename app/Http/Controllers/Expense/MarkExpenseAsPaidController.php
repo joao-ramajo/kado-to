@@ -19,8 +19,7 @@ class MarkExpenseAsPaidController extends Controller
     public function __construct(
         private readonly MarkExpenseAsPaidAction $markExpenseAsPaidAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke(string $id)
     {
@@ -40,7 +39,7 @@ class MarkExpenseAsPaidController extends Controller
         } catch (DomainException $e) {
             return response()
                 ->json([
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 400);
         }
     }

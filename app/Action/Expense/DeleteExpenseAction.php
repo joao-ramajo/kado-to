@@ -13,7 +13,7 @@ class DeleteExpenseAction
     {
         $expense = Expense::find($expenseId);
 
-        if (!$expense) {
+        if (! $expense) {
             throw new DomainException('Despesa não encontrada.');
         }
 

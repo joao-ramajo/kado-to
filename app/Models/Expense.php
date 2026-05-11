@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -41,10 +40,13 @@ class Expense extends Model
     use HasFactory;
 
     public const ORIGIN_DIRECT = 'direct';
+
     public const ORIGIN_CREDIT_CARD = 'credit_card';
 
     public const OCCURRENCE_DIRECT = 'direct';
+
     public const OCCURRENCE_PURCHASE = 'purchase';
+
     public const OCCURRENCE_INVOICE_PAYMENT = 'invoice_payment';
 
     /** @var list<string> */
@@ -88,7 +90,7 @@ class Expense extends Model
 
     public function setAmountAttribute(mixed $value): void
     {
-        if (is_numeric($value) && !str_contains((string) $value, '.') && !str_contains((string) $value, ',')) {
+        if (is_numeric($value) && ! str_contains((string) $value, '.') && ! str_contains((string) $value, ',')) {
             $this->attributes['amount'] = (int) $value;
 
             return;
@@ -107,7 +109,7 @@ class Expense extends Model
     protected static function booted(): void
     {
         static::saving(function ($expense) {
-            if (!isset($expense->payment_date) && $expense->status === 'paid') {
+            if (! isset($expense->payment_date) && $expense->status === 'paid') {
                 $expense->payment_date = Carbon::parse($expense->payment_date);
             }
         });

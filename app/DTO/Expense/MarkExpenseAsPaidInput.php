@@ -9,6 +9,5 @@ readonly class MarkExpenseAsPaidInput
     public function __construct(
         public int $expenseId,
         public int $userId,
-    ) {
-    }
+    ) {}
 }

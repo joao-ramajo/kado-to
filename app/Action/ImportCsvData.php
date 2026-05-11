@@ -30,8 +30,7 @@ class ImportCsvData
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(UploadedFile $file): bool
     {
@@ -50,6 +49,7 @@ class ImportCsvData
             $this->logger->warning($this->formatLogMessage('validation failed'), [
                 'user_id' => Auth::id(),
             ]);
+
             return false;
         }
 
@@ -60,15 +60,16 @@ class ImportCsvData
             ini_set('auto_detect_line_endings', '1');
 
             $handle = fopen($file->getRealPath(), 'r');
-            if (!$handle) {
+            if (! $handle) {
                 return false;
             }
 
             $header = fgetcsv($handle, 0, ';');
             $header[0] = preg_replace('/^\x{FEFF}/u', '', $header[0]);
 
-            if (!$this->validateHeaders($header)) {
+            if (! $this->validateHeaders($header)) {
                 fclose($handle);
+
                 return false;
             }
 
@@ -78,8 +79,9 @@ class ImportCsvData
                 // 👇 proteção contra linhas quebradas
                 if (count($data) !== count($header)) {
                     $this->logger->warning($this->formatLogMessage('invalid csv row ignored'), [
-                        'data' => $data
+                        'data' => $data,
                     ]);
+
                     continue;
                 }
 
@@ -120,7 +122,7 @@ class ImportCsvData
                 }
             }
 
-            if (!empty($batch)) {
+            if (! empty($batch)) {
                 DB::table('expenses')->insert($batch);
             }
 
@@ -137,8 +139,9 @@ class ImportCsvData
             DB::rollBack();
             $this->logger->error($this->formatLogMessage('failed'), [
                 'user_id' => Auth::id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -146,10 +149,11 @@ class ImportCsvData
     private function validateHeaders(array $headers): bool
     {
         foreach (self::REQUIRED_HEADERS as $required) {
-            if (!in_array($required, $headers)) {
+            if (! in_array($required, $headers)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -164,7 +168,7 @@ class ImportCsvData
 
     private function findOrCreateCategory(?string $categoryName): ?Category
     {
-        if (!$categoryName || $categoryName === '-') {
+        if (! $categoryName || $categoryName === '-') {
             return null;
         }
 
@@ -176,7 +180,7 @@ class ImportCsvData
             })
             ->first();
 
-        if (!$category) {
+        if (! $category) {
             $category = Category::create([
                 'name' => $categoryName,
                 'user_id' => Auth::id(),
@@ -204,7 +208,7 @@ class ImportCsvData
             ->where('name', $normalizedSourceName)
             ->first();
 
-        if (!$source) {
+        if (! $source) {
             $source = Source::query()->create([
                 'user_id' => Auth::id(),
                 'name' => $normalizedSourceName,

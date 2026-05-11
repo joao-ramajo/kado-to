@@ -17,7 +17,7 @@ class CsvExportStrategy implements ExportStrategyInterface
 
         $name = Str::slug($user->name);
 
-        $fileName = "{$name}-fillament-wallet-" . Str::uuid() . '.csv';
+        $fileName = "{$name}-fillament-wallet-".Str::uuid().'.csv';
 
         $callback = $this->generate($user->id);
 
@@ -32,7 +32,7 @@ class CsvExportStrategy implements ExportStrategyInterface
         return function () use ($userId) {
             $file = fopen('php://output', 'w');
 
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($file, [
                 'TITLE',

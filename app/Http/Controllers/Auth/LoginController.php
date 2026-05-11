@@ -6,17 +6,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Action\Auth\LoginAction;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use DomainException;
+use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
     public function __construct(
         protected readonly LoginAction $loginAction
-    ) {
-    }
+    ) {}
 
     public function __invoke(Request $request)
     {
@@ -38,7 +35,7 @@ class LoginController extends Controller
             ], 200);
         } catch (DomainException $e) {
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }

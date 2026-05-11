@@ -27,8 +27,7 @@ class AuthController extends Controller
         private readonly WebRegisterAction $webRegisterAction,
         private readonly WebLogoutAction $webLogoutAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function login(WebLoginRequest $request)
     {
@@ -49,6 +48,7 @@ class AuthController extends Controller
 
         if ($output->success) {
             $request->session()->regenerate();
+
             return redirect()->route('web.dashboard');
         }
 

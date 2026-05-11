@@ -11,8 +11,7 @@ readonly class CreateSourceOutput
     public function __construct(
         public string $message,
         public Source $source,
-    ) {
-    }
+    ) {}
 
     public function toArray(): array
     {

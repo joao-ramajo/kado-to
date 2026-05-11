@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->booted(function () {
-         if (app()->environment('production')) {
+        if (app()->environment('production')) {
             URL::forceScheme('https');
         }
     })

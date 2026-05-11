@@ -16,8 +16,7 @@ class WebLogoutAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(WebLogoutInput $input): WebLogoutOutput
     {

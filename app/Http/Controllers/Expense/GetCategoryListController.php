@@ -19,8 +19,7 @@ class GetCategoryListController extends Controller
     public function __construct(
         private readonly GetCategoryListAction $getCategoryListAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke(GetCategoryListRequest $request)
     {

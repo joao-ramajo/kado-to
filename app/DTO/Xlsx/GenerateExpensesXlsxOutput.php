@@ -10,6 +10,5 @@ readonly class GenerateExpensesXlsxOutput
 {
     public function __construct(
         public StreamedResponse $response,
-    ) {
-    }
+    ) {}
 }

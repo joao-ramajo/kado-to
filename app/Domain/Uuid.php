@@ -10,8 +10,7 @@ class Uuid
 {
     public function __construct(
         public readonly string $id
-    ) {
-    }
+    ) {}
 
     public function value(): string|int
     {

@@ -21,19 +21,19 @@ class SyncUsersSource extends Command
             $this->line("Processando usuário ID {$user->id}...");
 
             $sourceId = DB::table('sources')
-            ->where('user_id', $user->id)
-            ->where('is_default', true)
-            ->value('id');
+                ->where('user_id', $user->id)
+                ->where('is_default', true)
+                ->value('id');
 
-            if (!$sourceId) {
+            if (! $sourceId) {
                 $sourceId = DB::table('sources')->insertGetId([
-                'user_id' => $user->id,
-                'name' => 'Principal',
-                'color' => '#4F46E5',
-                'is_default' => true,
-                'allow_negative' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
+                    'user_id' => $user->id,
+                    'name' => 'Principal',
+                    'color' => '#4F46E5',
+                    'is_default' => true,
+                    'allow_negative' => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
                 $this->info("Fonte padrão criada (ID {$sourceId}).");
@@ -42,8 +42,8 @@ class SyncUsersSource extends Command
             }
 
             $updated = DB::table('expenses')
-            ->where('user_id', $user->id)
-            ->update(['source_id' => $sourceId]);
+                ->where('user_id', $user->id)
+                ->update(['source_id' => $sourceId]);
 
             $this->line("Despesas atualizadas: {$updated}");
         });

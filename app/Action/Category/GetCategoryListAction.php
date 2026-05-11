@@ -16,8 +16,7 @@ class GetCategoryListAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(GetCategoryListInput $input): GetCategoryListOutput
     {

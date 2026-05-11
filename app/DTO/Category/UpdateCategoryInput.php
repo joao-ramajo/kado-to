@@ -11,6 +11,5 @@ readonly class UpdateCategoryInput
         public int $userId,
         public string $name,
         public string $color,
-    ) {
-    }
+    ) {}
 }

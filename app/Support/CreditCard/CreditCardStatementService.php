@@ -14,7 +14,7 @@ class CreditCardStatementService
 {
     public function resolveForInstallment(Source $source, CarbonImmutable $installmentDate): CreditCardStatement
     {
-        if (!$source->isCreditCard()) {
+        if (! $source->isCreditCard()) {
             throw new DomainException('A fonte selecionada não é um cartão de crédito.');
         }
 

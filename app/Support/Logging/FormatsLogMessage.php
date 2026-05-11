@@ -12,6 +12,6 @@ trait FormatsLogMessage
     {
         $class = class_basename(static::class);
 
-        return '[' . Str::snake($class) . '] ' . $message;
+        return '['.Str::snake($class).'] '.$message;
     }
 }

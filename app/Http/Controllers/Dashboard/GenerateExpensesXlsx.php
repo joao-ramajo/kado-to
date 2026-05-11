@@ -17,8 +17,7 @@ class GenerateExpensesXlsx
     public function __construct(
         private readonly GenerateExpensesXlsxAction $generateExpensesXlsxAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke()
     {

@@ -9,8 +9,8 @@ use App\DTO\Category\CreateCategoryInput;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\CreateCategoryRequest;
 use App\Support\Logging\FormatsLogMessage;
-use Illuminate\Support\Facades\Auth;
 use DomainException;
+use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class CreateCategoryController extends Controller
@@ -20,8 +20,7 @@ class CreateCategoryController extends Controller
     public function __construct(
         private readonly CreateCategoryAction $createCategoryAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke(CreateCategoryRequest $request)
     {
@@ -46,7 +45,7 @@ class CreateCategoryController extends Controller
         } catch (DomainException $e) {
             return response()
                 ->json([
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 400);
         }
     }

@@ -19,8 +19,7 @@ class CreateSourceController extends Controller
     public function __construct(
         private readonly CreateSourceAction $createSourceAction,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function __invoke(CreateSourceRequest $request)
     {

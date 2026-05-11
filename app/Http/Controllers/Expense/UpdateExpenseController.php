@@ -13,8 +13,7 @@ class UpdateExpenseController extends Controller
 {
     public function __construct(
         protected readonly UpdateExpenseAction $updateExpenseAction
-    ) {
-    }
+    ) {}
 
     public function __invoke(UpdateExpenseRequest $request, int $id)
     {
@@ -30,7 +29,7 @@ class UpdateExpenseController extends Controller
         } catch (DomainException $e) {
             return response()
                 ->json([
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 400);
         }
     }

@@ -14,6 +14,7 @@ return new class extends Migration
             $table->enum('type', ['expense', 'income'])->default('expense');
         });
     }
+
     public function down(): void
     {
         Schema::table('expenses', function (Blueprint $table) {

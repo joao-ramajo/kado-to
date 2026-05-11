@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('color')->default('#0066FF');
         });
     }
+
     public function down(): void
     {
         Schema::table('categories', function (Blueprint $table) {

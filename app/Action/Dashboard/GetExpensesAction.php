@@ -8,8 +8,8 @@ use App\DTO\Dashboard\GetExpensesInput;
 use App\DTO\Dashboard\GetExpensesOutput;
 use App\Models\Expense;
 use App\Support\Logging\FormatsLogMessage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 
 class GetExpensesAction
@@ -18,8 +18,7 @@ class GetExpensesAction
 
     public function __construct(
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function execute(GetExpensesInput $input): GetExpensesOutput
     {
