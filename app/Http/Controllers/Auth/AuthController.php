@@ -31,7 +31,7 @@ class AuthController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function login(WebLoginRequest $request)
+    public function login(WebLoginRequest $request): Redirector|RedirectResponse
     {
         $validated = $request->validated();
 
@@ -59,7 +59,7 @@ class AuthController extends Controller
         ])->withInput();
     }
 
-    public function register(WebRegisterRequest $request)
+    public function register(WebRegisterRequest $request): Redirector|RedirectResponse
     {
         $validated = $request->validated();
         $this->logger->info($this->formatLogMessage('register request received'), [

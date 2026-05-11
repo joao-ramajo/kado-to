@@ -9,6 +9,7 @@ use App\DTO\Category\GetCategoryListInput;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\GetCategoryListRequest;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -21,7 +22,7 @@ class GetCategoryListController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke(GetCategoryListRequest $request)
+    public function __invoke(GetCategoryListRequest $request): JsonResponse
     {
         $userId = Auth::id();
         $month = $request->validated('month');

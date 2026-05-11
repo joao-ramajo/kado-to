@@ -9,6 +9,7 @@ use App\DTO\Expense\MarkExpenseAsPaidInput;
 use App\Http\Controllers\Controller;
 use App\Support\Logging\FormatsLogMessage;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -21,7 +22,7 @@ class MarkExpenseAsPaidController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke(string $id)
+    public function __invoke(string $id): JsonResponse
     {
         try {
             $expenseId = (int) $id;

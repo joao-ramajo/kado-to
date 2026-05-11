@@ -14,6 +14,15 @@ readonly class GetSummaryOutput
         public int $creditCardLimitUsed,
     ) {}
 
+    /**
+     * @return array{
+     *     total_receive: int,
+     *     total_expense: int,
+     *     expected_total: int,
+     *     credit_card_open_total: int,
+     *     credit_card_limit_used: int
+     * }
+     */
     public function toArray(): array
     {
         return [

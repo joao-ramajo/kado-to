@@ -83,6 +83,7 @@ class ExpensesListSheet implements XlsxSheet
         }
     }
 
+    /** @param list<list<string|float|null>> $data */
     private function insertData(Worksheet $sheet, array $data): void
     {
         $sheet->fromArray($data, null, 'A2');
@@ -169,14 +170,14 @@ class ExpensesListSheet implements XlsxSheet
         $this->applyDateAlignment($sheet, $lastRow);
     }
 
-    private function applyDescriptionAlignment($sheet, int $lastRow): void
+    private function applyDescriptionAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('A2:A' . $lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_LEFT);
     }
 
-    private function applyValueAlignment($sheet, int $lastRow): void
+    private function applyValueAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('B2:B' . $lastRow)->applyFromArray([
             'alignment' => [
@@ -185,35 +186,35 @@ class ExpensesListSheet implements XlsxSheet
         ]);
     }
 
-    private function applyStatusAlignment($sheet, int $lastRow): void
+    private function applyStatusAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('C2:C' . $lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }
 
-    private function applyCategoryAlignment($sheet, int $lastRow): void
+    private function applyCategoryAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('D2:D' . $lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_LEFT);
     }
 
-    private function applyTypeAlignment($sheet, int $lastRow): void
+    private function applyTypeAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('E2:E' . $lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }
 
-    private function applySourceAlignment($sheet, int $lastRow): void
+    private function applySourceAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('F2:F' . $lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_LEFT);
     }
 
-    private function applyDateAlignment($sheet, int $lastRow): void
+    private function applyDateAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('G2:G' . $lastRow)
             ->getAlignment()
@@ -235,6 +236,7 @@ class ExpensesListSheet implements XlsxSheet
             ->setFormatCode(NumberFormat::FORMAT_DATE_DDMMYYYY);
     }
 
+    /** @param array<int, object{status: string, type: string}> $rawData */
     private function applyConditionalFormatting(Worksheet $sheet, array $rawData): void
     {
         foreach ($rawData as $index => $row) {
@@ -245,7 +247,7 @@ class ExpensesListSheet implements XlsxSheet
         }
     }
 
-    private function formatStatus($sheet, int $rowNum, string $status): void
+    private function formatStatus(Worksheet $sheet, int $rowNum, string $status): void
     {
         if ($status === 'paid') {
             $sheet->getStyle('C' . $rowNum)->applyFromArray([
@@ -271,7 +273,7 @@ class ExpensesListSheet implements XlsxSheet
         }
     }
 
-    private function formatType($sheet, int $rowNum, string $type): void
+    private function formatType(Worksheet $sheet, int $rowNum, string $type): void
     {
         if ($type === 'income') {
             $this->formatAsIncome($sheet, $rowNum);
@@ -280,7 +282,7 @@ class ExpensesListSheet implements XlsxSheet
         }
     }
 
-    private function formatAsIncome($sheet, int $rowNum): void
+    private function formatAsIncome(Worksheet $sheet, int $rowNum): void
     {
         $sheet->getStyle('E' . $rowNum)->applyFromArray([
             'font' => [
@@ -296,7 +298,7 @@ class ExpensesListSheet implements XlsxSheet
         ]);
     }
 
-    private function formatAsExpense($sheet, int $rowNum): void
+    private function formatAsExpense(Worksheet $sheet, int $rowNum): void
     {
         $sheet->getStyle('E' . $rowNum)->applyFromArray([
             'font' => [
@@ -310,6 +312,7 @@ class ExpensesListSheet implements XlsxSheet
         $sheet->freezePane('A2');
     }
 
+    /** @return list<string> */
     private function getHeaders(): array
     {
         return [
@@ -323,6 +326,17 @@ class ExpensesListSheet implements XlsxSheet
         ];
     }
 
+    /**
+     * @return array<int, object{
+     *     title: string,
+     *     amount: int|string,
+     *     status: string,
+     *     category: string|null,
+     *     type: string,
+     *     source: string|null,
+     *     payment_date: string|null
+     * }>
+     */
     private function getValues(): array
     {
         return DB::table('expenses')
@@ -343,9 +357,21 @@ class ExpensesListSheet implements XlsxSheet
             ->toArray();
     }
 
+    /**
+     * @param array<int, object{
+     *     title: string,
+     *     amount: int|string,
+     *     status: string,
+     *     category: string|null,
+     *     type: string,
+     *     source: string|null,
+     *     payment_date: string|null
+     * }> $values
+     * @return list<list<string|float|null>>
+     */
     private function normalizeValues(array $values): array
     {
-        return array_map(fn($row): array => [
+        return array_map(fn (object $row): array => [
             $row->title,
             $this->normalizeMoney((int) $row->amount),
             $this->translateStatus($row->status),

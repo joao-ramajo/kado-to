@@ -8,6 +8,7 @@ use App\Action\Expense\UpdateExpenseAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\UpdateExpenseRequest;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 
 class UpdateExpenseController extends Controller
 {
@@ -15,7 +16,7 @@ class UpdateExpenseController extends Controller
         protected readonly UpdateExpenseAction $updateExpenseAction
     ) {}
 
-    public function __invoke(UpdateExpenseRequest $request, int $id)
+    public function __invoke(UpdateExpenseRequest $request, int $id): JsonResponse
     {
         try {
             $data = $request->validated();

@@ -79,6 +79,7 @@ class Expense extends Model
         'installment_total' => 'integer',
     ];
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -116,16 +117,19 @@ class Expense extends Model
         });
     }
 
+    /** @return BelongsTo<Category, $this> */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    /** @return BelongsTo<Source, $this> */
     public function source(): BelongsTo
     {
         return $this->belongsTo(Source::class);
     }
 
+    /** @return BelongsTo<CreditCardStatement, $this> */
     public function creditCardStatement(): BelongsTo
     {
         return $this->belongsTo(CreditCardStatement::class, 'credit_card_statement_id');

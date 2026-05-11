@@ -10,6 +10,7 @@ readonly class UpdateCategoryOutput
         public string $message,
     ) {}
 
+    /** @return array{message: string} */
     public function toArray(): array
     {
         return [

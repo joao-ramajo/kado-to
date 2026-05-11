@@ -13,6 +13,7 @@ readonly class CreateSourceOutput
         public Source $source,
     ) {}
 
+    /** @return array{message: string, data: array<string, mixed>} */
     public function toArray(): array
     {
         return [

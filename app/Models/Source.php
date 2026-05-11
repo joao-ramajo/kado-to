@@ -56,6 +56,7 @@ class Source extends Model
         'statement_due_day' => 'integer',
     ];
 
+    /** @return HasMany<CreditCardStatement, $this> */
     public function statements(): HasMany
     {
         return $this->hasMany(CreditCardStatement::class);

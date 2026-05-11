@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
 ])]
 class CreditCardStatement extends Model
 {
+    /** @use HasFactory<\Database\Factories\CreditCardStatementFactory> */
     use HasFactory;
 
     public const STATUS_OPEN = 'open';
@@ -57,16 +58,19 @@ class CreditCardStatement extends Model
         'total_amount' => 'integer',
     ];
 
+    /** @return BelongsTo<Source, $this> */
     public function source(): BelongsTo
     {
         return $this->belongsTo(Source::class);
     }
 
+    /** @return BelongsTo<Source, $this> */
     public function paymentSource(): BelongsTo
     {
         return $this->belongsTo(Source::class, 'payment_source_id');
     }
 
+    /** @return HasMany<Expense, $this> */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class, 'credit_card_statement_id');

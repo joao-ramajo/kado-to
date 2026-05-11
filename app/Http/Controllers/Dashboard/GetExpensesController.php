@@ -9,6 +9,7 @@ use App\DTO\Dashboard\GetExpensesInput;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\GetExpensesRequest;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -21,7 +22,7 @@ class GetExpensesController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke(GetExpensesRequest $request)
+    public function __invoke(GetExpensesRequest $request): JsonResponse
     {
         $userId = Auth::id();
         $status = $request->validated('status');

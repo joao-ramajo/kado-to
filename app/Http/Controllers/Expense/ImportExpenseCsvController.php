@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Expense;
 
 use App\Action\ImportCsvData;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 
 class ImportExpenseCsvController extends Controller
 {
@@ -14,8 +16,9 @@ class ImportExpenseCsvController extends Controller
         protected readonly ImportCsvData $importCsvDataAction
     ) {}
 
-    public function __invoke(Request $request)
+    public function __invoke(Request $request): JsonResponse
     {
+        /** @var UploadedFile $file */
         $file = $request->file('file');
 
         $this->importCsvDataAction->execute($file);

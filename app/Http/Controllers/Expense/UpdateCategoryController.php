@@ -9,6 +9,7 @@ use App\DTO\Category\UpdateCategoryInput;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\UpdateCategoryRequest;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class UpdateCategoryController extends Controller
@@ -17,7 +18,7 @@ class UpdateCategoryController extends Controller
         private readonly UpdateCategoryAction $updateCategoryAction,
     ) {}
 
-    public function __invoke(UpdateCategoryRequest $request, int $id)
+    public function __invoke(UpdateCategoryRequest $request, int $id): JsonResponse
     {
         try {
             $validated = $request->validated();

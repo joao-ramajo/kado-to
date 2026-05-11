@@ -8,6 +8,7 @@ use App\Action\CreditCard\PayCreditCardStatementAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreditCard\PayCreditCardStatementRequest;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class PayCreditCardStatementController extends Controller
@@ -16,7 +17,7 @@ class PayCreditCardStatementController extends Controller
         private readonly PayCreditCardStatementAction $payCreditCardStatementAction,
     ) {}
 
-    public function __invoke(PayCreditCardStatementRequest $request, int $statementId)
+    public function __invoke(PayCreditCardStatementRequest $request, int $statementId): JsonResponse
     {
         try {
             $this->payCreditCardStatementAction->execute(

@@ -8,6 +8,7 @@ use App\Action\Source\GetSourceDetailsAction;
 use App\DTO\Source\GetSourceDetailsInput;
 use App\Http\Controllers\Controller;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -20,7 +21,7 @@ class GetSourceDetailsController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke()
+    public function __invoke(): JsonResponse
     {
         $userId = Auth::id();
         $this->logger->info($this->formatLogMessage('request received'), [

@@ -19,6 +19,20 @@ class CreateExpense
         private readonly CreditCardStatementService $creditCardStatementService,
     ) {}
 
+    /**
+     * @param array{
+     *     title: string,
+     *     amount: int,
+     *     type: string,
+     *     status: string,
+     *     userId: int,
+     *     category_id?: int|null,
+     *     source_id?: int|null,
+     *     purchase_date?: string|null,
+     *     payment_date?: string|null,
+     *     installment_total?: int|null
+     * } $data
+     */
     public function execute(array $data): void
     {
         DB::transaction(function () use ($data): void {
@@ -45,6 +59,18 @@ class CreateExpense
         return $source;
     }
 
+    /**
+     * @param array{
+     *     title: string,
+     *     amount: int,
+     *     type: string,
+     *     status: string,
+     *     userId: int,
+     *     category_id?: int|null,
+     *     payment_date?: string|null,
+     *     purchase_date?: string|null
+     * } $data
+     */
     private function createDirectExpense(Source $source, array $data): void
     {
         $paymentDate = null;
@@ -70,11 +96,23 @@ class CreateExpense
         ]);
     }
 
+    /**
+     * @param array{
+     *     title: string,
+     *     amount: int,
+     *     type: string,
+     *     status: string,
+     *     userId: int,
+     *     category_id?: int|null,
+     *     purchase_date?: string|null,
+     *     installment_total?: int|null
+     * } $data
+     */
     private function createCreditCardPurchase(Source $source, array $data): void
     {
-        throw_if(($data['type'] ?? null) !== 'expense', DomainException::class, 'Cartão de crédito aceita apenas despesas.');
+        throw_if($data['type'] !== 'expense', DomainException::class, 'Cartão de crédito aceita apenas despesas.');
 
-        throw_if(($data['status'] ?? null) === 'paid', DomainException::class, 'Compras no cartão devem ser quitadas pelo pagamento da fatura.');
+        throw_if($data['status'] === 'paid', DomainException::class, 'Compras no cartão devem ser quitadas pelo pagamento da fatura.');
 
         $purchaseDate = isset($data['purchase_date'])
             ? CarbonImmutable::createFromFormat('Y-m-d', $data['purchase_date'])

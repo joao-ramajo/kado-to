@@ -97,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
         Route::bind('uuid', fn(string $value): Uuid => new Uuid($value));
     }
 
+    /** @param list<class-string> $classes */
     private function bindChannelLogger(string $channel, array $classes): void
     {
         $this->app

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Expense;
 use App\Action\Expense\DeleteExpenseAction;
 use App\Http\Controllers\Controller;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class DeleteExpenseController extends Controller
@@ -15,7 +16,7 @@ class DeleteExpenseController extends Controller
         protected readonly DeleteExpenseAction $deleteExpenseAction
     ) {}
 
-    public function __invoke(string $id)
+    public function __invoke(string $id): JsonResponse
     {
         try {
             $userId = Auth::id();

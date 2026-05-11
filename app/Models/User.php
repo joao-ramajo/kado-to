@@ -55,16 +55,19 @@ class User extends Authenticatable
         ];
     }
 
+    /** @return HasMany<Expense, $this> */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
     }
 
+    /** @return HasMany<Category, $this> */
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
     }
 
+    /** @return HasMany<Source, $this> */
     public function sources(): HasMany
     {
         return $this->hasMany(Source::class);

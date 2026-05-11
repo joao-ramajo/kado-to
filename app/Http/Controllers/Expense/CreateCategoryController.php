@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\CreateCategoryRequest;
 use App\Support\Logging\FormatsLogMessage;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -22,7 +23,7 @@ class CreateCategoryController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke(CreateCategoryRequest $request)
+    public function __invoke(CreateCategoryRequest $request): JsonResponse
     {
         try {
             $validated = $request->validated();

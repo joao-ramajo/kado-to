@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Expense;
 use App\Action\Expense\CreateExpense;
 use App\Http\Requests\Expense\CreateExpenseRequest;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class CreateExpenseController
@@ -15,7 +16,7 @@ class CreateExpenseController
         protected readonly CreateExpense $createExpense
     ) {}
 
-    public function __invoke(CreateExpenseRequest $request)
+    public function __invoke(CreateExpenseRequest $request): JsonResponse
     {
         try {
             $data = $request->validated();

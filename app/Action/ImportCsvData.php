@@ -18,12 +18,14 @@ class ImportCsvData
 {
     use FormatsLogMessage;
 
+    /** @var list<string> */
     private const DEFAULT_SOURCE_ALIASES = [
         'principal',
         'carteira principal',
         'fonte principal',
     ];
 
+    /** @var list<string> */
     private const REQUIRED_HEADERS = [
         'TITLE', 'AMOUNT', 'STATUS', 'TYPE', 'PAYMENT_DATE',
         'DUE_DATE', 'CREATED_AT', 'CATEGORY_NAME', 'SOURCE_NAME',
@@ -147,6 +149,7 @@ class ImportCsvData
         }
     }
 
+    /** @param list<string> $headers */
     private function validateHeaders(array $headers): bool
     {
         foreach (self::REQUIRED_HEADERS as $required) {
@@ -158,6 +161,7 @@ class ImportCsvData
         return true;
     }
 
+    /** @param array<string, string> $row */
     private function isDuplicate(array $row): bool
     {
         return DB::table('expenses')

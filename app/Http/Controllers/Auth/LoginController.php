@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Action\Auth\LoginAction;
 use App\Http\Controllers\Controller;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LoginController extends Controller
@@ -15,7 +16,7 @@ class LoginController extends Controller
         protected readonly LoginAction $loginAction
     ) {}
 
-    public function __invoke(Request $request)
+    public function __invoke(Request $request): JsonResponse
     {
         try {
             $credentials = $request->validate([

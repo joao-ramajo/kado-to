@@ -66,6 +66,13 @@ class SourcesSummarySheet implements XlsxSheet
         $sheet->getColumnDimension('D')->setWidth(18);
     }
 
+    /**
+     * @return array<int, object{
+     *     source: string|null,
+     *     total_income: int|string,
+     *     total_expense: int|string
+     * }>
+     */
     private function getValues(): array
     {
         return DB::table('expenses')
@@ -81,12 +88,20 @@ class SourcesSummarySheet implements XlsxSheet
             ->toArray();
     }
 
+    /**
+     * @param array<int, object{
+     *     source: string|null,
+     *     total_income: int|string,
+     *     total_expense: int|string
+     * }> $values
+     * @return list<list<string|float>>
+     */
     private function normalizeValues(array $values): array
     {
         $totalIncome = 0;
         $totalExpense = 0;
 
-        $rows = array_map(function ($row) use (&$totalIncome, &$totalExpense): array {
+        $rows = array_map(function (object $row) use (&$totalIncome, &$totalExpense): array {
             $income = (int) $row->total_income;
             $expense = (int) $row->total_expense;
 

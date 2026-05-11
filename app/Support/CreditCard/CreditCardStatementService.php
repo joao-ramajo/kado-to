@@ -58,6 +58,7 @@ class CreditCardStatementService
         return $statement->refresh();
     }
 
+    /** @return list<int> */
     public function splitInstallments(int $amount, int $installmentTotal): array
     {
         throw_if($installmentTotal < 1, DomainException::class, 'A quantidade de parcelas deve ser maior que zero.');

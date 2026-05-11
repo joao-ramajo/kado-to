@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Dashboard;
 use App\Action\Dashboard\GetSummaryAction;
 use App\DTO\Dashboard\GetSummaryInput;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -20,8 +22,9 @@ class GetSummaryController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke()
+    public function __invoke(): JsonResponse
     {
+        /** @var User $user */
         $user = Auth::user();
         $defaultSourceId = $user->sources()
             ->where('is_default', true)

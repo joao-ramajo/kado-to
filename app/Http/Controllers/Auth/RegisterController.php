@@ -8,6 +8,7 @@ use App\Action\Auth\RegisterUserAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 
 class RegisterController extends Controller
 {
@@ -15,7 +16,7 @@ class RegisterController extends Controller
         protected readonly RegisterUserAction $registerUserAction
     ) {}
 
-    public function __invoke(RegisterRequest $request)
+    public function __invoke(RegisterRequest $request): JsonResponse
     {
         try {
             $data = $request->validated();

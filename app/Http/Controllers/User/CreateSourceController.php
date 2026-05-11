@@ -9,6 +9,7 @@ use App\DTO\Source\CreateSourceInput;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\CreateSourceRequest;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
@@ -21,7 +22,7 @@ class CreateSourceController extends Controller
         private readonly LoggerInterface $logger,
     ) {}
 
-    public function __invoke(CreateSourceRequest $request)
+    public function __invoke(CreateSourceRequest $request): JsonResponse
     {
         $userId = Auth::id();
         $validated = $request->validated();
