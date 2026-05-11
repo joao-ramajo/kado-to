@@ -50,34 +50,36 @@ class XlsxExportStrategy implements ExportStrategyInterface
                 'TÍTULO',
                 'VALOR',
                 'STATUS',
+                'TIPO',
                 'DATA PAGAMENTO',
                 'DATA VENCIMENTO',
                 'CRIADO EM',
                 'CATEGORIA',
-                'CONTA',
+                'FONTE',
             ];
 
             $sheet->fromArray([$headers], null, 'A1');
-            $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
 
-            foreach (range('A', 'H') as $col) {
+            foreach (range('A', 'I') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
             $row = 2;
             DB::table('expenses')
                 ->leftJoin('categories', 'categories.id', '=', 'expenses.category_id')
-                ->leftJoin('bank_accounts', 'bank_accounts.id', '=', 'expenses.bank_account_id')
+                ->leftJoin('sources', 'sources.id', '=', 'expenses.source_id')
                 ->where('expenses.user_id', $user->id)
                 ->select(
                     'expenses.title',
                     'expenses.amount',
                     'expenses.status',
+                    'expenses.type',
                     'expenses.payment_date',
                     'expenses.due_date',
                     'expenses.created_at',
                     'categories.name as category_name',
-                    'bank_accounts.name as bank_account_name'
+                    'sources.name as source_name'
                 )
                 ->latest('expenses.created_at')
                 ->chunk(1000, function ($expenses) use ($sheet, &$row): void {
@@ -85,11 +87,12 @@ class XlsxExportStrategy implements ExportStrategyInterface
                         $sheet->setCellValue('A'.$row, $expense->title ?? '-');
                         $sheet->setCellValue('B'.$row, $expense->amount);
                         $sheet->setCellValue('C'.$row, $expense->status ?? '-');
-                        $sheet->setCellValue('D'.$row, $expense->payment_date ?? '-');
-                        $sheet->setCellValue('E'.$row, $expense->due_date ?? '-');
-                        $sheet->setCellValue('F'.$row, $expense->created_at ?? '-');
-                        $sheet->setCellValue('G'.$row, $expense->category_name ?? '-');
-                        $sheet->setCellValue('H'.$row, $expense->bank_account_name ?? '-');
+                        $sheet->setCellValue('D'.$row, $expense->type ?? '-');
+                        $sheet->setCellValue('E'.$row, $expense->payment_date ?? '-');
+                        $sheet->setCellValue('F'.$row, $expense->due_date ?? '-');
+                        $sheet->setCellValue('G'.$row, $expense->created_at ?? '-');
+                        $sheet->setCellValue('H'.$row, $expense->category_name ?? '-');
+                        $sheet->setCellValue('I'.$row, $expense->source_name ?? '-');
                         $row++;
                     }
                 });
@@ -131,34 +134,36 @@ class XlsxExportStrategy implements ExportStrategyInterface
                 'TÍTULO',
                 'VALOR',
                 'STATUS',
+                'TIPO',
                 'DATA PAGAMENTO',
                 'DATA VENCIMENTO',
                 'CRIADO EM',
                 'CATEGORIA',
-                'CONTA',
+                'FONTE',
             ];
 
             $sheet->fromArray([$headers], null, 'A1');
-            $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
 
-            foreach (range('A', 'H') as $col) {
+            foreach (range('A', 'I') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
             $row = 2;
             DB::table('expenses')
                 ->leftJoin('categories', 'categories.id', '=', 'expenses.category_id')
-                ->leftJoin('bank_accounts', 'bank_accounts.id', '=', 'expenses.bank_account_id')
+                ->leftJoin('sources', 'sources.id', '=', 'expenses.source_id')
                 ->where('expenses.user_id', $userId)
                 ->select(
                     'expenses.title',
                     'expenses.amount',
                     'expenses.status',
+                    'expenses.type',
                     'expenses.payment_date',
                     'expenses.due_date',
                     'expenses.created_at',
                     'categories.name as category_name',
-                    'bank_accounts.name as bank_account_name'
+                    'sources.name as source_name'
                 )
                 ->latest('expenses.created_at')
                 ->chunk(1000, function ($expenses) use ($sheet, &$row): void {
@@ -166,11 +171,12 @@ class XlsxExportStrategy implements ExportStrategyInterface
                         $sheet->setCellValue('A'.$row, $expense->title ?? '-');
                         $sheet->setCellValue('B'.$row, $expense->amount);
                         $sheet->setCellValue('C'.$row, $expense->status ?? '-');
-                        $sheet->setCellValue('D'.$row, $expense->payment_date ?? '-');
-                        $sheet->setCellValue('E'.$row, $expense->due_date ?? '-');
-                        $sheet->setCellValue('F'.$row, $expense->created_at ?? '-');
-                        $sheet->setCellValue('G'.$row, $expense->category_name ?? '-');
-                        $sheet->setCellValue('H'.$row, $expense->bank_account_name ?? '-');
+                        $sheet->setCellValue('D'.$row, $expense->type ?? '-');
+                        $sheet->setCellValue('E'.$row, $expense->payment_date ?? '-');
+                        $sheet->setCellValue('F'.$row, $expense->due_date ?? '-');
+                        $sheet->setCellValue('G'.$row, $expense->created_at ?? '-');
+                        $sheet->setCellValue('H'.$row, $expense->category_name ?? '-');
+                        $sheet->setCellValue('I'.$row, $expense->source_name ?? '-');
                         $row++;
                     }
                 });

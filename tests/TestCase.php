@@ -13,6 +13,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         config([
+            'app.key' => 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
             'database.default' => 'sqlite',
             'database.connections.sqlite.database' => ':memory:',
             'logging.default' => 'null',
@@ -26,7 +27,5 @@ abstract class TestCase extends BaseTestCase
             'logging.channels.export.driver' => 'null',
             'logging.channels.mail.driver' => 'null',
         ]);
-
-        $this->artisan('migrate');
     }
 }

@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /*
@@ -14,9 +17,10 @@ use Tests\TestCase;
 |
 */
 
-pest()->extend(TestCase::class)
-//  ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Feature');
+pest()
+    ->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -42,7 +46,9 @@ expect()->extend('toBeOne', fn () => $this->toBe(1));
 |
 */
 
-function something(): void
-{
-    // ..
+if (! function_exists('apiTokenFor')) {
+    function apiTokenFor(User $user): string
+    {
+        return $user->createToken('test')->plainTextToken;
+    }
 }

@@ -59,7 +59,11 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
-        "post-autoload-dump": [
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "./vendor/bin/pest --coverage --min=90"
+        ],
+       "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
         ],
