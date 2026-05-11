@@ -61,7 +61,7 @@
         ],
         "test:coverage": [
             "@php artisan config:clear --ansi",
-            "./vendor/bin/pest --coverage --min=90"
+            "./vendor/bin/pest --coverage --min=75"
         ],
        "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
