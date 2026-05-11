@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\CreateSourceRequest;
 use App\Support\Logging\FormatsLogMessage;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class CreateSourceController extends Controller
@@ -24,7 +23,17 @@ class CreateSourceController extends Controller
 
     public function __invoke(CreateSourceRequest $request): JsonResponse
     {
-        $userId = Auth::id();
+        $userId = $this->authenticatedUserId();
+        /** @var array{
+         *     name: string,
+         *     type?: string|null,
+         *     color: string,
+         *     allow_negative?: bool,
+         *     credit_limit?: int|null,
+         *     statement_closing_day?: int|null,
+         *     statement_due_day?: int|null
+         * } $validated
+         */
         $validated = $request->validated();
 
         $this->logger->info($this->formatLogMessage('request received'), [

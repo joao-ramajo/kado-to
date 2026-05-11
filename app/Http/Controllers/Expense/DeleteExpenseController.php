@@ -8,7 +8,6 @@ use App\Action\Expense\DeleteExpenseAction;
 use App\Http\Controllers\Controller;
 use DomainException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 
 class DeleteExpenseController extends Controller
 {
@@ -19,7 +18,7 @@ class DeleteExpenseController extends Controller
     public function __invoke(string $id): JsonResponse
     {
         try {
-            $userId = Auth::id();
+            $userId = $this->authenticatedUserId();
 
             $this->deleteExpenseAction->execute(
                 (int) $id,

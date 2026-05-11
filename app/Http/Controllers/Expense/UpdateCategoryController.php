@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\UpdateCategoryRequest;
 use DomainException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 
 class UpdateCategoryController extends Controller
 {
@@ -21,11 +20,12 @@ class UpdateCategoryController extends Controller
     public function __invoke(UpdateCategoryRequest $request, int $id): JsonResponse
     {
         try {
+            /** @var array{name: string, color: string} $validated */
             $validated = $request->validated();
 
             $input = new UpdateCategoryInput(
                 id: $id,
-                userId: Auth::id(),
+                userId: $this->authenticatedUserId(),
                 name: $validated['name'],
                 color: $validated['color'],
             );

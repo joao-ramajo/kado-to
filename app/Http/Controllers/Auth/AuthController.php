@@ -33,6 +33,7 @@ class AuthController extends Controller
 
     public function login(WebLoginRequest $request): Redirector|RedirectResponse
     {
+        /** @var array{email: string, password: string} $validated */
         $validated = $request->validated();
 
         $this->logger->info($this->formatLogMessage('login request received'), [
@@ -61,6 +62,7 @@ class AuthController extends Controller
 
     public function register(WebRegisterRequest $request): Redirector|RedirectResponse
     {
+        /** @var array{name: string, email: string, password: string} $validated */
         $validated = $request->validated();
         $this->logger->info($this->formatLogMessage('register request received'), [
             'email' => $validated['email'],
@@ -79,7 +81,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): Redirector|RedirectResponse
     {
-        $userId = Auth::id() ?? 0;
+        $userId = $this->authenticatedUserId();
         $this->logger->info($this->formatLogMessage('logout request received'), [
             'user_id' => $userId,
         ]);

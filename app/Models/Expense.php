@@ -87,18 +87,30 @@ class Expense extends Model
 
     protected function getAmountAttribute(mixed $value): float
     {
+        if (! is_numeric($value)) {
+            return 0.0;
+        }
+
         return ((float) $value) / 100;
     }
 
     protected function setAmountAttribute(mixed $value): void
     {
-        if (is_numeric($value) && ! str_contains((string) $value, '.') && ! str_contains((string) $value, ',')) {
+        if (is_int($value)) {
             $this->attributes['amount'] = (int) $value;
 
             return;
         }
 
-        $clean = preg_replace('/[^\d.,]/', '', (string) $value);
+        $stringValue = is_string($value) ? $value : (is_float($value) ? (string) $value : '');
+
+        if ($stringValue !== '' && is_numeric($stringValue) && ! str_contains($stringValue, '.') && ! str_contains($stringValue, ',')) {
+            $this->attributes['amount'] = (int) $stringValue;
+
+            return;
+        }
+
+        $clean = preg_replace('/[^\d.,]/', '', $stringValue) ?? '';
 
         if (str_contains((string) $clean, ',')) {
             $clean = str_replace('.', '', $clean);
@@ -110,9 +122,9 @@ class Expense extends Model
 
     protected static function booted(): void
     {
-        static::saving(function ($expense): void {
-            if (! isset($expense->payment_date) && $expense->status === 'paid') {
-                $expense->payment_date = Date::parse($expense->payment_date);
+        static::saving(function (self $expense): void {
+            if ($expense->payment_date === null && $expense->status === 'paid') {
+                $expense->payment_date = Date::now();
             }
         });
     }

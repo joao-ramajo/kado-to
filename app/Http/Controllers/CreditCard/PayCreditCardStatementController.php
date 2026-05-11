@@ -9,7 +9,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreditCard\PayCreditCardStatementRequest;
 use DomainException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 
 class PayCreditCardStatementController extends Controller
 {
@@ -22,8 +21,8 @@ class PayCreditCardStatementController extends Controller
         try {
             $this->payCreditCardStatementAction->execute(
                 $statementId,
-                (int) Auth::id(),
-                (int) $request->validated('payment_source_id'),
+                $this->authenticatedUserId(),
+                $request->integer('payment_source_id'),
             );
 
             return response()->json([

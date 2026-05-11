@@ -19,6 +19,7 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request): JsonResponse
     {
         try {
+            /** @var array{name: string, email: string, password: string} $data */
             $data = $request->validated();
 
             $result = $this->registerUserAction->execute($data);

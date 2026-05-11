@@ -37,9 +37,14 @@ class ImportCsvData
 
     public function execute(UploadedFile $file): bool
     {
+        $userId = Auth::id();
+        if (! is_int($userId)) {
+            return false;
+        }
+
         $startedAt = microtime(true);
         $this->logger->info($this->formatLogMessage('started'), [
-            'user_id' => Auth::id(),
+            'user_id' => $userId,
             'file' => $file->getClientOriginalName(),
         ]);
 
@@ -50,7 +55,7 @@ class ImportCsvData
 
         if ($validator->fails()) {
             $this->logger->warning($this->formatLogMessage('validation failed'), [
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
             ]);
 
             return false;
@@ -68,7 +73,15 @@ class ImportCsvData
             }
 
             $header = fgetcsv($handle, 0, ';');
+            if ($header === false || ! isset($header[0])) {
+                fclose($handle);
+
+                return false;
+            }
+
             $header[0] = preg_replace('/^\x{FEFF}/u', '', (string) $header[0]);
+            /** @var list<string> $header */
+            $header = array_map(static fn (?string $value): string => (string) $value, $header);
 
             if (! $this->validateHeaders($header)) {
                 fclose($handle);
@@ -89,14 +102,19 @@ class ImportCsvData
                 }
 
                 // 👇 normaliza encoding
+                /** @var list<string> $data */
                 $data = array_map(
-                    fn ($v): string => trim(
-                        mb_convert_encoding($v, 'UTF-8', 'UTF-8,ISO-8859-1,WINDOWS-1252')
-                    ),
+                    static function (?string $v): string {
+                        $converted = mb_convert_encoding((string) $v, 'UTF-8', 'UTF-8,ISO-8859-1,WINDOWS-1252');
+
+                        return trim($converted !== false ? $converted : '');
+                    },
                     $data
                 );
 
                 $row = array_combine($header, $data);
+                /** @var array<string, string> $row */
+                $row = $row;
 
                 if ($this->isDuplicate($row)) {
                     continue;
@@ -114,7 +132,7 @@ class ImportCsvData
                     'due_date' => $row['DUE_DATE'] !== '-' ? $row['DUE_DATE'] : null,
                     'created_at' => $row['CREATED_AT'],
                     'updated_at' => now(),
-                    'user_id' => Auth::id(),
+                    'user_id' => $userId,
                     'category_id' => $category?->id,
                     'source_id' => $sourceId,
                 ];
@@ -133,7 +151,7 @@ class ImportCsvData
             DB::commit();
 
             $this->logger->info($this->formatLogMessage('completed'), [
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'import_time_ms' => (int) ((microtime(true) - $startedAt) * 1000),
             ]);
 
@@ -141,7 +159,7 @@ class ImportCsvData
         } catch (Throwable $throwable) {
             DB::rollBack();
             $this->logger->error($this->formatLogMessage('failed'), [
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'error' => $throwable->getMessage(),
             ]);
 
@@ -164,10 +182,15 @@ class ImportCsvData
     /** @param array<string, string> $row */
     private function isDuplicate(array $row): bool
     {
+        $userId = Auth::id();
+        if (! is_int($userId)) {
+            return false;
+        }
+
         return DB::table('expenses')
             ->where('amount', $row['AMOUNT'])
             ->where('created_at', $row['CREATED_AT'])
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->exists();
     }
 
@@ -179,16 +202,22 @@ class ImportCsvData
 
         $category = Category::query()->where('name', $categoryName)
             ->where(function ($query): void {
+                $userId = Auth::id();
                 $query
                     ->whereNull('user_id')
-                    ->orWhere('user_id', Auth::id());
+                    ->orWhere('user_id', is_int($userId) ? $userId : 0);
             })
             ->first();
 
         if (! $category) {
+            $userId = Auth::id();
+            if (! is_int($userId)) {
+                return null;
+            }
+
             return Category::query()->create([
                 'name' => $categoryName,
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
             ]);
         }
 
@@ -197,6 +226,11 @@ class ImportCsvData
 
     private function findOrCreateSourceId(?string $sourceName): ?int
     {
+        $userId = Auth::id();
+        if (! is_int($userId)) {
+            return null;
+        }
+
         $normalizedSourceName = trim((string) $sourceName);
         $normalizedSourceAlias = mb_strtolower($normalizedSourceName);
 
@@ -209,13 +243,13 @@ class ImportCsvData
         }
 
         $source = Source::query()
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->where('name', $normalizedSourceName)
             ->first();
 
         if (! $source) {
             $source = Source::query()->create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'name' => $normalizedSourceName,
                 'color' => '#64748B',
                 'is_default' => false,
@@ -228,9 +262,16 @@ class ImportCsvData
 
     private function getDefaultSourceId(): ?int
     {
-        return DB::table('sources')
-            ->where('user_id', Auth::id())
+        $userId = Auth::id();
+        if (! is_int($userId)) {
+            return null;
+        }
+
+        $sourceId = DB::table('sources')
+            ->where('user_id', $userId)
             ->where('is_default', true)
             ->value('id');
+
+        return is_int($sourceId) ? $sourceId : null;
     }
 }

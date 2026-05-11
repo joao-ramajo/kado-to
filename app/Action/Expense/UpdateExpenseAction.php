@@ -32,9 +32,10 @@ class UpdateExpenseAction
         throw_if($expense->origin_type === Expense::ORIGIN_CREDIT_CARD || $expense->occurrence_type === Expense::OCCURRENCE_INVOICE_PAYMENT, DomainException::class, 'Registros de cartão devem ser gerenciados pelo fluxo da fatura.');
 
         if ($data['status'] === 'paid') {
-            $data['payment_date'] = isset($data['payment_date'])
-                ? Date::createFromFormat('Y-m-d', $data['payment_date'])->startOfDay()
-                : now();
+            $paymentDate = isset($data['payment_date'])
+                ? Date::createFromFormat('Y-m-d', $data['payment_date'])
+                : null;
+            $data['payment_date'] = $paymentDate?->startOfDay() ?? now();
         } else {
             $data['payment_date'] = null;
         }

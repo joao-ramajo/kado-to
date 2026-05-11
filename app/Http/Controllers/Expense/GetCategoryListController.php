@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Expense\GetCategoryListRequest;
 use App\Support\Logging\FormatsLogMessage;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class GetCategoryListController extends Controller
@@ -24,8 +23,8 @@ class GetCategoryListController extends Controller
 
     public function __invoke(GetCategoryListRequest $request): JsonResponse
     {
-        $userId = Auth::id();
-        $month = $request->validated('month');
+        $userId = $this->authenticatedUserId();
+        $month = $request->integer('month');
 
         $this->logger->info($this->formatLogMessage('request received'), [
             'user_id' => $userId,
@@ -33,7 +32,7 @@ class GetCategoryListController extends Controller
         ]);
 
         $output = $this->getCategoryListAction->execute(
-            new GetCategoryListInput($userId, $month !== null ? (int) $month : null)
+            new GetCategoryListInput($userId, $request->has('month') ? $month : null)
         );
 
         return response()->json($output->toArray());

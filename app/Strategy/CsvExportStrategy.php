@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace App\Strategy;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use stdClass;
 
 class CsvExportStrategy implements ExportStrategyInterface
 {
     public function execute(): StreamedResponse
     {
         $user = Auth::user();
+        if (! $user instanceof User) {
+            throw new \RuntimeException('Usuário autenticado não encontrado.');
+        }
 
         $name = Str::slug($user->name);
 
@@ -31,6 +36,9 @@ class CsvExportStrategy implements ExportStrategyInterface
     {
         return function () use ($userId): void {
             $file = fopen('php://output', 'w');
+            if ($file === false) {
+                throw new \RuntimeException('Não foi possível abrir o stream de saída.');
+            }
 
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
@@ -64,7 +72,8 @@ class CsvExportStrategy implements ExportStrategyInterface
                 ->latest('expenses.created_at')
                 ->chunk(1000, function ($expenses) use ($file): void {
                     foreach ($expenses as $expense) {
-                        fputcsv($file, [
+                        /** @var array<int, bool|float|int|string|null> $fields */
+                        $fields = [
                             $expense->title ?? '-',
                             $expense->amount,
                             $expense->status ?? '-',
@@ -74,7 +83,9 @@ class CsvExportStrategy implements ExportStrategyInterface
                             $expense->created_at ?? '-',
                             $expense->category_name ?? '-',
                             $expense->source_name ?? '-',
-                        ], ';');
+                        ];
+
+                        fputcsv($file, $fields, ';');
                     }
                 });
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Strategy\CsvExportStrategy;
+use App\Strategy\ExportStrategyInterface;
 use App\Strategy\XlsxExportStrategy;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -13,15 +14,12 @@ class ExportService
 {
     public function execute(Request $request): StreamedResponse
     {
-        $mapper = [
-            'csv' => CsvExportStrategy::class,
-            'xlsx' => XlsxExportStrategy::class,
-        ];
+        $type = $request->string('type')->toString();
+        $strategy = match ($type) {
+            'xlsx' => app(XlsxExportStrategy::class),
+            default => app(CsvExportStrategy::class),
+        };
 
-        $type = $request->get('type') ?? 'csv';
-
-        $final = resolve($mapper[$type]);
-
-        return $final->execute();
+        return $strategy->execute();
     }
 }

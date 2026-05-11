@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Support\Logging\FormatsLogMessage;
 use DomainException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class MarkExpenseAsPaidController extends Controller
@@ -26,7 +25,7 @@ class MarkExpenseAsPaidController extends Controller
     {
         try {
             $expenseId = (int) $id;
-            $userId = Auth::id();
+            $userId = $this->authenticatedUserId();
             $this->logger->info($this->formatLogMessage('request received'), [
                 'user_id' => $userId,
                 'expense_id' => $expenseId,

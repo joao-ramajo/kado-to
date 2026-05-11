@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\GetExpensesRequest;
 use App\Support\Logging\FormatsLogMessage;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class GetExpensesController extends Controller
@@ -24,11 +23,11 @@ class GetExpensesController extends Controller
 
     public function __invoke(GetExpensesRequest $request): JsonResponse
     {
-        $userId = Auth::id();
-        $status = $request->validated('status');
-        $query = $request->validated('query');
-        $categoryId = $request->validated('category_id');
-        $month = $request->validated('month');
+        $userId = $this->authenticatedUserId();
+        $status = $request->has('status') ? $request->string('status')->toString() : null;
+        $query = $request->has('query') ? $request->string('query')->toString() : null;
+        $categoryId = $request->has('category_id') ? $request->integer('category_id') : null;
+        $month = $request->has('month') ? $request->integer('month') : null;
 
         $this->logger->info($this->formatLogMessage('request received'), [
             'user_id' => $userId,
@@ -43,8 +42,8 @@ class GetExpensesController extends Controller
                 $userId,
                 $status,
                 $query,
-                $categoryId !== null ? (int) $categoryId : null,
-                $month !== null ? (int) $month : null,
+                $categoryId,
+                $month,
             )
         );
 

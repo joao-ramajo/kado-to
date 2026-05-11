@@ -8,9 +8,11 @@ use App\DTO\Dashboard\GetExpensesInput;
 use App\DTO\Dashboard\GetExpensesOutput;
 use App\Models\Expense;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
+use stdClass;
 
 class GetExpensesAction
 {
@@ -48,21 +50,21 @@ class GetExpensesAction
 
         if ($input->month !== null) {
             if ($input->categoryId !== null) {
-                $query->where(function ($monthQuery) use ($input): void {
+                $query->where(function (Builder $monthQuery) use ($input): void {
                     $monthQuery
-                        ->where(function ($paidQuery) use ($input): void {
+                        ->where(function (Builder $paidQuery) use ($input): void {
                             $paidQuery
                                 ->where('expenses.occurrence_type', Expense::OCCURRENCE_PURCHASE)
                                 ->whereMonth('expenses.due_date', $input->month);
                         })
-                        ->orWhere(function ($paidQuery) use ($input): void {
+                        ->orWhere(function (Builder $paidQuery) use ($input): void {
                             $paidQuery
                                 ->where('expenses.occurrence_type', '!=', Expense::OCCURRENCE_PURCHASE)
                                 ->where('expenses.status', 'paid')
                                 ->whereNotNull('expenses.payment_date')
                                 ->whereMonth('expenses.payment_date', $input->month);
                         })
-                        ->orWhere(function ($unpaidQuery) use ($input): void {
+                        ->orWhere(function (Builder $unpaidQuery) use ($input): void {
                             $unpaidQuery
                                 ->where('expenses.occurrence_type', '!=', Expense::OCCURRENCE_PURCHASE)
                                 ->where('expenses.status', '!=', 'paid')
@@ -70,14 +72,14 @@ class GetExpensesAction
                         });
                 });
             } else {
-                $query->where(function ($monthQuery) use ($input): void {
+                $query->where(function (Builder $monthQuery) use ($input): void {
                     $monthQuery
-                        ->where(function ($purchaseQuery) use ($input): void {
+                        ->where(function (Builder $purchaseQuery) use ($input): void {
                             $purchaseQuery
                                 ->where('expenses.occurrence_type', Expense::OCCURRENCE_PURCHASE)
                                 ->whereMonth('expenses.due_date', $input->month);
                         })
-                        ->orWhere(function ($defaultQuery) use ($input): void {
+                        ->orWhere(function (Builder $defaultQuery) use ($input): void {
                             $defaultQuery
                                 ->where('expenses.occurrence_type', '!=', Expense::OCCURRENCE_PURCHASE)
                                 ->whereMonth('expenses.created_at', $input->month);
@@ -113,14 +115,21 @@ class GetExpensesAction
 
         if ($input->query !== null && trim($input->query) !== '') {
             $normalizedQuery = $this->normalizeSearchTerm($input->query);
-            $expenses = $expenses->filter(function ($expense) use ($normalizedQuery): bool {
-                $normalizedTitle = $this->normalizeSearchTerm((string) $expense->title);
+            $expenses = $expenses->filter(function (stdClass $expense) use ($normalizedQuery): bool {
+                if (! isset($expense->title) || ! is_string($expense->title)) {
+                    return false;
+                }
+
+                $normalizedTitle = $this->normalizeSearchTerm($expense->title);
 
                 return str_contains($normalizedTitle, $normalizedQuery);
             })->values();
         }
 
-        $expenses = $expenses->toArray();
+        /** @var list<array<string, mixed>> $expenses */
+        $expenses = array_values($expenses->map(
+            static fn (stdClass $expense): array => get_object_vars($expense)
+        )->all());
 
         $this->logger->info($this->formatLogMessage('completed'), [
             'user_id' => $input->userId,

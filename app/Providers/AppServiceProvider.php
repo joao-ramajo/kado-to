@@ -103,6 +103,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app
             ->when($classes)
             ->needs(LoggerInterface::class)
-            ->give(fn($app) => $app->make(LogManager::class)->channel($channel));
+            ->give(fn (): LoggerInterface => $this->app->make(LogManager::class)->channel($channel));
     }
 }

@@ -31,7 +31,8 @@ class GetSourceDetailsAction
         $startedAt = microtime(true);
         $sources = Source::query()->where('user_id', $input->userId)->get();
 
-        $items = $sources->map(function (Source $source) use ($input): array {
+        /** @var list<array<string, mixed>> $items */
+        $items = array_values($sources->map(function (Source $source) use ($input): array {
             if ($source->isCreditCard()) {
                 $currentStatement = CreditCardStatement::query()->where('source_id', $source->id)
                     ->where('status', '!=', CreditCardStatement::STATUS_PAID)
@@ -103,7 +104,7 @@ class GetSourceDetailsAction
                 'available_limit' => null,
                 'current_statement' => null,
             ];
-        })->values()->all();
+        })->all());
 
         $this->logger->info($this->formatLogMessage('completed'), [
             'user_id' => $input->userId,

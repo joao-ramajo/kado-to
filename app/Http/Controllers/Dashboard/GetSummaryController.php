@@ -7,10 +7,8 @@ namespace App\Http\Controllers\Dashboard;
 use App\Action\Dashboard\GetSummaryAction;
 use App\DTO\Dashboard\GetSummaryInput;
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Support\Logging\FormatsLogMessage;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class GetSummaryController extends Controller
@@ -24,19 +22,19 @@ class GetSummaryController extends Controller
 
     public function __invoke(): JsonResponse
     {
-        /** @var User $user */
-        $user = Auth::user();
-        $defaultSourceId = $user->sources()
+        $userId = $this->authenticatedUserId();
+        $defaultSourceId = auth()->user()?->sources()
             ->where('is_default', true)
             ->value('id');
+        $defaultSourceId = is_int($defaultSourceId) ? $defaultSourceId : null;
 
         $this->logger->info($this->formatLogMessage('request received'), [
-            'user_id' => $user->id,
+            'user_id' => $userId,
             'default_source_id' => $defaultSourceId,
         ]);
 
         $output = $this->getSummaryAction->execute(
-            new GetSummaryInput($user->id, $defaultSourceId)
+            new GetSummaryInput($userId, $defaultSourceId)
         );
 
         return response()->json($output->toArray());

@@ -24,11 +24,14 @@ class GetSourceListAction
             'user_id' => $input->userId,
         ]);
 
-        $sources = Source::query()->where('user_id', $input->userId)
+        /** @var list<array<string, mixed>> $sources */
+        $sources = array_values(Source::query()->where('user_id', $input->userId)
             ->orderByDesc('is_default')
             ->orderBy('name')
             ->get()
-            ->toArray();
+            ->map(static fn (Source $source): array => $source->toArray())
+            ->values()
+            ->all());
 
         $this->logger->info($this->formatLogMessage('completed'), [
             'user_id' => $input->userId,

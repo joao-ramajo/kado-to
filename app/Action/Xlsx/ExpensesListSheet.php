@@ -57,7 +57,13 @@ class ExpensesListSheet implements XlsxSheet
 
     private function getUserId(): int
     {
-        return Auth::id() ?? 0;
+        $userId = Auth::id();
+
+        if (is_int($userId)) {
+            return $userId;
+        }
+
+        return 0;
     }
 
     private function setupHeaders(Worksheet $sheet): void
@@ -339,7 +345,7 @@ class ExpensesListSheet implements XlsxSheet
      */
     private function getValues(): array
     {
-        return DB::table('expenses')
+        $values = DB::table('expenses')
             ->where('expenses.user_id', $this->getUserId())
             ->leftJoin('categories', 'expenses.category_id', '=', 'categories.id')
             ->leftJoin('sources', 'expenses.source_id', '=', 'sources.id')
@@ -355,6 +361,18 @@ class ExpensesListSheet implements XlsxSheet
             )
             ->get()
             ->toArray();
+
+        /** @var array<int, object{
+         *     title: string,
+         *     amount: int|string,
+         *     status: string,
+         *     category: string|null,
+         *     type: string,
+         *     source: string|null,
+         *     payment_date: string|null
+         * }> $values
+         */
+        return $values;
     }
 
     /**
@@ -371,7 +389,7 @@ class ExpensesListSheet implements XlsxSheet
      */
     private function normalizeValues(array $values): array
     {
-        return array_map(fn (object $row): array => [
+        return array_values(array_map(fn (object $row): array => [
             $row->title,
             $this->normalizeMoney((int) $row->amount),
             $this->translateStatus($row->status),
@@ -379,7 +397,7 @@ class ExpensesListSheet implements XlsxSheet
             $this->translateType($row->type),
             $row->source ?? '-',
             $this->toExcelDate($row->payment_date),
-        ], $values);
+        ], $values));
     }
 
     private function normalizeMoney(int|string $amount): float
@@ -395,7 +413,13 @@ class ExpensesListSheet implements XlsxSheet
             return null;
         }
 
-        return ExcelDate::PHPToExcel(\Illuminate\Support\Facades\Date::parse($date));
+        $excelDate = ExcelDate::PHPToExcel(\Illuminate\Support\Facades\Date::parse($date));
+
+        if (is_float($excelDate)) {
+            return $excelDate;
+        }
+
+        return null;
     }
 
     private function translateStatus(string $status): string

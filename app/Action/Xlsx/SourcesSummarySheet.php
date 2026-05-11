@@ -48,7 +48,13 @@ class SourcesSummarySheet implements XlsxSheet
 
     private function getUserId(): int
     {
-        return Auth::id() ?? 0;
+        $userId = Auth::id();
+
+        if (is_int($userId)) {
+            return $userId;
+        }
+
+        return 0;
     }
 
     private function setupHeaders(Worksheet $sheet): void
@@ -75,7 +81,7 @@ class SourcesSummarySheet implements XlsxSheet
      */
     private function getValues(): array
     {
-        return DB::table('expenses')
+        $values = DB::table('expenses')
             ->leftJoin('sources', 'sources.id', '=', 'expenses.source_id')
             ->where('expenses.user_id', $this->getUserId())
             ->selectRaw('
@@ -86,6 +92,14 @@ class SourcesSummarySheet implements XlsxSheet
             ->groupBy('sources.name')
             ->get()
             ->toArray();
+
+        /** @var array<int, object{
+         *     source: string|null,
+         *     total_income: int|string,
+         *     total_expense: int|string
+         * }> $values
+         */
+        return $values;
     }
 
     /**
@@ -101,7 +115,7 @@ class SourcesSummarySheet implements XlsxSheet
         $totalIncome = 0;
         $totalExpense = 0;
 
-        $rows = array_map(function (object $row) use (&$totalIncome, &$totalExpense): array {
+        $rows = array_values(array_map(function (object $row) use (&$totalIncome, &$totalExpense): array {
             $income = (int) $row->total_income;
             $expense = (int) $row->total_expense;
 
@@ -114,7 +128,7 @@ class SourcesSummarySheet implements XlsxSheet
                 $this->normalizeMoney($expense),
                 $this->normalizeMoney($income - $expense),
             ];
-        }, $values);
+        }, $values));
 
         // Linha de total
         $rows[] = [

@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Support\Logging\FormatsLogMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class GetSourceListController extends Controller
@@ -24,7 +23,7 @@ class GetSourceListController extends Controller
 
     public function __invoke(Request $request): JsonResponse
     {
-        $userId = Auth::id();
+        $userId = $this->authenticatedUserId();
         $this->logger->info($this->formatLogMessage('request received'), [
             'user_id' => $userId,
         ]);

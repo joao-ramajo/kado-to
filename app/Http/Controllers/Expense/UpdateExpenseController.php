@@ -19,6 +19,17 @@ class UpdateExpenseController extends Controller
     public function __invoke(UpdateExpenseRequest $request, int $id): JsonResponse
     {
         try {
+            /** @var array{
+             *     title: string,
+             *     amount: int,
+             *     type: string,
+             *     status: string,
+             *     category_id?: int|null,
+             *     source_id?: int|null,
+             *     purchase_date?: string|null,
+             *     payment_date?: string|null
+             * } $data
+             */
             $data = $request->validated();
 
             $this->updateExpenseAction->execute($data, $id);

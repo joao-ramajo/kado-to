@@ -16,9 +16,12 @@ readonly class CreateSourceOutput
     /** @return array{message: string, data: array<string, mixed>} */
     public function toArray(): array
     {
+        /** @var array<string, mixed> $data */
+        $data = $this->source->toArray();
+
         return [
             'message' => $this->message,
-            'data' => $this->source->toArray(),
+            'data' => $data,
         ];
     }
 }

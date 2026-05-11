@@ -8,6 +8,7 @@ use App\DTO\Category\GetCategoryListInput;
 use App\DTO\Category\GetCategoryListOutput;
 use App\Models\Category;
 use App\Support\Logging\FormatsLogMessage;
+use Illuminate\Database\Eloquent\Builder;
 use Psr\Log\LoggerInterface;
 
 class GetCategoryListAction
@@ -27,32 +28,35 @@ class GetCategoryListAction
 
         $startedAt = microtime(true);
 
-        $applyMonthFilter = function ($query) use ($input): void {
+        $applyMonthFilter = static function (Builder $query) use ($input): void {
             if ($input->month !== null) {
                 $query->whereMonth('created_at', $input->month);
             }
         };
 
-        $categories = Category::query()
-            ->where(function ($q) use ($input): void {
+        /** @var list<array<string, mixed>> $categories */
+        $categories = array_values(Category::query()
+            ->where(function (Builder $q) use ($input): void {
                 $q->where('user_id', $input->userId)
                     ->orWhereNull('user_id');
             })
             ->withCount([
-                'expenses as expenses_count' => function ($q) use ($input, $applyMonthFilter): void {
+                'expenses as expenses_count' => function (Builder $q) use ($input, $applyMonthFilter): void {
                     $q->where('user_id', $input->userId);
                     $applyMonthFilter($q);
                 },
             ])
             ->withSum([
-                'expenses as expenses_total_amount' => function ($q) use ($input, $applyMonthFilter): void {
+                'expenses as expenses_total_amount' => function (Builder $q) use ($input, $applyMonthFilter): void {
                     $q->where('user_id', $input->userId)->where('type', 'expense');
                     $applyMonthFilter($q);
                 },
             ], 'amount')
             ->orderBy('name', 'asc')
             ->get()
-            ->toArray();
+            ->map(static fn (Category $category): array => $category->toArray())
+            ->values()
+            ->all());
 
         $this->logger->info($this->formatLogMessage('completed'), [
             'user_id' => $input->userId,

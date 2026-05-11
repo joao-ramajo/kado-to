@@ -14,6 +14,12 @@ class Uuid
 
     public function value(): string|int
     {
-        return Crypt::decrypt($this->id);
+        $value = Crypt::decrypt($this->id);
+
+        if (is_string($value) || is_int($value)) {
+            return $value;
+        }
+
+        return '';
     }
 }

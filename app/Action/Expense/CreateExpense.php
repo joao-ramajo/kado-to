@@ -77,8 +77,9 @@ class CreateExpense
 
         if ($data['status'] === 'paid') {
             $paymentDate = isset($data['payment_date'])
-                ? Date::createFromFormat('Y-m-d', $data['payment_date'])->startOfDay()
-                : now();
+                ? Date::createFromFormat('Y-m-d', $data['payment_date'])
+                : null;
+            $paymentDate = $paymentDate?->startOfDay() ?? now();
         }
 
         Expense::query()->create([
@@ -116,7 +117,8 @@ class CreateExpense
 
         $purchaseDate = isset($data['purchase_date'])
             ? CarbonImmutable::createFromFormat('Y-m-d', $data['purchase_date'])
-            : CarbonImmutable::today();
+            : null;
+        $purchaseDate ??= CarbonImmutable::today();
         $installmentTotal = (int) ($data['installment_total'] ?? 1);
         $installmentAmounts = $this->creditCardStatementService->splitInstallments((int) $data['amount'], $installmentTotal);
         $groupId = (string) Str::uuid();

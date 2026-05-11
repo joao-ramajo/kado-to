@@ -19,6 +19,7 @@ class LoginController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         try {
+            /** @var array{email: string, password: string, remember?: bool} $credentials */
             $credentials = $request->validate([
                 'email' => ['required', 'email'],
                 'password' => ['required'],

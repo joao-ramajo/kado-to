@@ -11,7 +11,6 @@ use App\Http\Requests\Expense\CreateCategoryRequest;
 use App\Support\Logging\FormatsLogMessage;
 use DomainException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Psr\Log\LoggerInterface;
 
 class CreateCategoryController extends Controller
@@ -26,8 +25,9 @@ class CreateCategoryController extends Controller
     public function __invoke(CreateCategoryRequest $request): JsonResponse
     {
         try {
+            /** @var array{name: string, color: string} $validated */
             $validated = $request->validated();
-            $userId = Auth::id();
+            $userId = $this->authenticatedUserId();
 
             $this->logger->info($this->formatLogMessage('request received'), [
                 'user_id' => $userId,
