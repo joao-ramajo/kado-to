@@ -57,6 +57,7 @@ class PayCreditCardStatementAction
                 'due_date' => $statement->due_at,
                 'purchase_date' => $statement->reference_month->toDateString(),
                 'source_id' => $paymentSource->id,
+                'credit_card_statement_id' => $statement->id,
                 'origin_type' => Expense::ORIGIN_DIRECT,
                 'occurrence_type' => Expense::OCCURRENCE_INVOICE_PAYMENT,
             ]);

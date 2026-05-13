@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CreditCard\PayCreditCardStatementController;
+use App\Http\Controllers\CreditCard\UndoPayCreditCardStatementController;
 use App\Http\Controllers\Dashboard\GenerateExpenseCsv;
 use App\Http\Controllers\Dashboard\GenerateExpensesXlsx;
 use App\Http\Controllers\Dashboard\GetExpensesController;
@@ -42,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('credit-cards/statements')->group(function (): void {
         Route::post('/{statementId}/pay', PayCreditCardStatementController::class)
             ->name('api.credit-cards.statements.pay');
+        Route::post('/{statementId}/undo-pay', UndoPayCreditCardStatementController::class)
+            ->name('api.credit-cards.statements.undo-pay');
     });
 
     Route::prefix('expenses')->group(function (): void {

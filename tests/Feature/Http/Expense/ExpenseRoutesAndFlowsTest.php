@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Category;
+use App\Models\CreditCardStatement;
 use App\Models\Expense;
 use App\Models\Source;
 use App\Models\User;
@@ -314,6 +315,55 @@ test('quero editar uma despesa para uma entrada com sucesso', function (): void 
         'type' => 'income',
         'amount' => 450000,
     ]);
+});
+
+test('quero editar uma compra no cartao de credito e sincronizar a fatura', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('test')->plainTextToken;
+    $creditCard = Source::factory()->creditCard()->create([
+        'user_id' => $user->id,
+        'statement_closing_day' => 5,
+        'statement_due_day' => 10,
+    ]);
+
+    $this->withHeader('Authorization', 'Bearer '.$token)
+        ->postJson(route('api.expenses.create'), [
+            'title' => 'Notebook',
+            'amount' => 100000,
+            'type' => 'expense',
+            'status' => 'pending',
+            'source_id' => $creditCard->id,
+            'purchase_date' => '2026-03-01',
+            'installment_total' => 1,
+        ])
+        ->assertCreated();
+
+    $expense = Expense::query()
+        ->where('user_id', $user->id)
+        ->where('source_id', $creditCard->id)
+        ->firstOrFail();
+
+    $statement = CreditCardStatement::query()
+        ->where('source_id', $creditCard->id)
+        ->firstOrFail();
+
+    $response = $this->withHeader('Authorization', 'Bearer '.$token)
+        ->putJson(route('api.expenses.update', ['id' => $expense->id]), [
+            'title' => 'Notebook gamer',
+            'amount' => 125000,
+            'type' => 'expense',
+            'status' => 'pending',
+            'source_id' => $creditCard->id,
+        ]);
+
+    $response->assertOk();
+
+    $expense->refresh();
+    $statement->refresh();
+
+    expect($expense->title)->toBe('Notebook gamer');
+    expect($expense->amount)->toBe(1250.0);
+    expect($statement->total_amount)->toBe(125000);
 });
 
 test('ao editar uma despesa paga devo conseguir informar payment_date somente com data', function (): void {

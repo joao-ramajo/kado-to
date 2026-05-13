@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Action\CreditCard\PayCreditCardStatementAction;
+use App\Action\CreditCard\UndoPayCreditCardStatementAction;
 use App\Models\CreditCardStatement;
 use App\Models\Expense;
 use App\Models\Source;
@@ -107,8 +108,52 @@ test('pay statement baixa compras e cria lançamento no caixa', function (): voi
     $this->assertDatabaseHas('expenses', [
         'source_id' => $cashSource->id,
         'occurrence_type' => Expense::OCCURRENCE_INVOICE_PAYMENT,
+        'credit_card_statement_id' => $statement->id,
         'amount' => 30000,
         'status' => 'paid',
+    ]);
+});
+
+test('undo pay statement reabre fatura, reverte compras e remove lançamento no caixa', function (): void {
+    $user = User::factory()->create();
+    $cashSource = $user->sources()->where('is_default', true)->firstOrFail();
+    $creditCard = Source::factory()->creditCard()->create(['user_id' => $user->id]);
+    $statement = CreditCardStatement::factory()->create([
+        'source_id' => $creditCard->id,
+        'reference_month' => '2026-04-01',
+        'closing_at' => '2026-04-05',
+        'due_at' => '2026-04-10',
+        'status' => CreditCardStatement::STATUS_OPEN,
+        'total_amount' => 30000,
+    ]);
+
+    $purchase = Expense::factory()->create([
+        'user_id' => $user->id,
+        'source_id' => $creditCard->id,
+        'amount' => 30000,
+        'status' => 'pending',
+        'payment_date' => null,
+        'origin_type' => Expense::ORIGIN_CREDIT_CARD,
+        'occurrence_type' => Expense::OCCURRENCE_PURCHASE,
+        'credit_card_statement_id' => $statement->id,
+    ]);
+
+    resolve(PayCreditCardStatementAction::class)->execute($statement->id, $user->id, $cashSource->id);
+
+    resolve(UndoPayCreditCardStatementAction::class)->execute($statement->id, $user->id);
+
+    $statement->refresh();
+    $purchase->refresh();
+
+    expect($statement->status)->toBe(CreditCardStatement::STATUS_CLOSED)
+        ->and($statement->paid_at)->toBeNull()
+        ->and($statement->payment_source_id)->toBeNull()
+        ->and($purchase->status)->toBe('pending')
+        ->and($purchase->payment_date)->toBeNull();
+
+    $this->assertDatabaseMissing('expenses', [
+        'credit_card_statement_id' => $statement->id,
+        'occurrence_type' => Expense::OCCURRENCE_INVOICE_PAYMENT,
     ]);
 });
 

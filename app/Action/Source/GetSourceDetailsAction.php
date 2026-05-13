@@ -39,6 +39,11 @@ class GetSourceDetailsAction
                     ->oldest('due_at')
                     ->first();
 
+                $lastPaidStatement = CreditCardStatement::query()->where('source_id', $source->id)
+                    ->where('status', CreditCardStatement::STATUS_PAID)
+                    ->latest('paid_at')
+                    ->first();
+
                 if ($currentStatement !== null) {
                     $currentStatement = $this->creditCardStatementService->sync($currentStatement);
                 }
@@ -75,6 +80,14 @@ class GetSourceDetailsAction
                         'status' => $currentStatement->status,
                         'total_amount' => $currentStatement->total_amount,
                     ] : null,
+                    'last_paid_statement' => $lastPaidStatement instanceof CreditCardStatement ? [
+                        'id' => $lastPaidStatement->id,
+                        'reference_month' => $lastPaidStatement->reference_month->toDateString(),
+                        'closing_at' => $lastPaidStatement->closing_at->toDateString(),
+                        'due_at' => $lastPaidStatement->due_at->toDateString(),
+                        'status' => $lastPaidStatement->status,
+                        'total_amount' => $lastPaidStatement->total_amount,
+                    ] : null,
                 ];
             }
 
@@ -109,6 +122,7 @@ class GetSourceDetailsAction
                 'used_limit' => null,
                 'available_limit' => null,
                 'current_statement' => null,
+                'last_paid_statement' => null,
             ];
         })->all());
 
