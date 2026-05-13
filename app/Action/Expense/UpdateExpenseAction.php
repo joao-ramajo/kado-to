@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Action\Expense;
 
+use App\Models\CreditCardStatement;
 use App\Models\Expense;
+use App\Models\Source;
 use App\Support\CreditCard\CreditCardStatementService;
 use DomainException;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +52,19 @@ class UpdateExpenseAction
                     $sourceIdWasProvided && $data['source_id'] !== $expense->source_id,
                     DomainException::class,
                     'Compras no cartão devem continuar na mesma fonte.'
+                );
+
+                $source = Source::query()->findOrFail($expense->source_id);
+                $statement = CreditCardStatement::query()->findOrFail((int) $expense->credit_card_statement_id);
+                $rawCurrentAmount = $expense->getRawOriginal('amount');
+                $currentAmount = is_numeric($rawCurrentAmount) ? (int) $rawCurrentAmount : 0;
+                $newAmount = $data['amount'];
+
+                $this->creditCardStatementService->ensureUpdatedPurchaseFitsWithinLimit(
+                    $source,
+                    $statement,
+                    $currentAmount,
+                    $newAmount
                 );
 
                 $data['type'] = $expense->type;

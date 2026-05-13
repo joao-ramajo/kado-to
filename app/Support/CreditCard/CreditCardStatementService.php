@@ -21,15 +21,21 @@ class CreditCardStatementService
         $closingAt = $referenceMonth->day(min((int) $source->statement_closing_day, $referenceMonth->daysInMonth));
         $dueAt = $referenceMonth->day(min((int) $source->statement_due_day, $referenceMonth->daysInMonth));
 
-        $statement = CreditCardStatement::query()->firstOrCreate([
-            'source_id' => $source->id,
-            'reference_month' => $referenceMonth->toDateString(),
-        ], [
-            'closing_at' => $closingAt->toDateString(),
-            'due_at' => $dueAt->toDateString(),
-            'status' => $this->determineStatus(null, $closingAt),
-            'total_amount' => 0,
-        ]);
+        $statement = CreditCardStatement::query()
+            ->where('source_id', $source->id)
+            ->whereDate('reference_month', $referenceMonth->toDateString())
+            ->first();
+
+        if ($statement === null) {
+            $statement = CreditCardStatement::query()->create([
+                'source_id' => $source->id,
+                'reference_month' => $referenceMonth->toDateString(),
+                'closing_at' => $closingAt->toDateString(),
+                'due_at' => $dueAt->toDateString(),
+                'status' => $this->determineStatus(null, $closingAt),
+                'total_amount' => 0,
+            ]);
+        }
 
         return $this->sync($statement);
     }
@@ -56,6 +62,33 @@ class CreditCardStatementService
         $statement->save();
 
         return $statement->refresh();
+    }
+
+    public function ensurePurchaseFitsWithinLimit(Source $source, CreditCardStatement $statement, int $amount): void
+    {
+        $creditLimit = (int) $source->credit_limit;
+
+        throw_if(
+            $statement->total_amount + $amount > $creditLimit,
+            DomainException::class,
+            'A compra excede o limite disponível desta fatura.'
+        );
+    }
+
+    public function ensureUpdatedPurchaseFitsWithinLimit(
+        Source $source,
+        CreditCardStatement $statement,
+        int $currentAmount,
+        int $newAmount,
+    ): void {
+        $creditLimit = (int) $source->credit_limit;
+        $updatedTotal = $statement->total_amount - $currentAmount + $newAmount;
+
+        throw_if(
+            $updatedTotal > $creditLimit,
+            DomainException::class,
+            'A compra excede o limite disponível desta fatura.'
+        );
     }
 
     /** @return list<int> */

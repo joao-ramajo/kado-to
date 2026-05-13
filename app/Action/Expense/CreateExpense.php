@@ -128,6 +128,7 @@ class CreateExpense
             $installmentNumber = $index + 1;
             $installmentDate = $purchaseDate->addMonthsNoOverflow($index);
             $statement = $this->creditCardStatementService->resolveForInstallment($source, $installmentDate);
+            $this->creditCardStatementService->ensurePurchaseFitsWithinLimit($source, $statement, $installmentAmount);
 
             Expense::query()->create([
                 'title' => $data['title'],

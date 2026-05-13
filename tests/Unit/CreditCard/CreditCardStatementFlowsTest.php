@@ -127,10 +127,20 @@ test('undo pay statement reabre fatura, reverte compras e remove lançamento no 
         'total_amount' => 30000,
     ]);
 
-    $purchase = Expense::factory()->create([
+    $firstPurchase = Expense::factory()->create([
         'user_id' => $user->id,
         'source_id' => $creditCard->id,
-        'amount' => 30000,
+        'amount' => 10000,
+        'status' => 'pending',
+        'payment_date' => null,
+        'origin_type' => Expense::ORIGIN_CREDIT_CARD,
+        'occurrence_type' => Expense::OCCURRENCE_PURCHASE,
+        'credit_card_statement_id' => $statement->id,
+    ]);
+    $secondPurchase = Expense::factory()->create([
+        'user_id' => $user->id,
+        'source_id' => $creditCard->id,
+        'amount' => 20000,
         'status' => 'pending',
         'payment_date' => null,
         'origin_type' => Expense::ORIGIN_CREDIT_CARD,
@@ -143,13 +153,16 @@ test('undo pay statement reabre fatura, reverte compras e remove lançamento no 
     resolve(UndoPayCreditCardStatementAction::class)->execute($statement->id, $user->id);
 
     $statement->refresh();
-    $purchase->refresh();
+    $firstPurchase->refresh();
+    $secondPurchase->refresh();
 
     expect($statement->status)->toBe(CreditCardStatement::STATUS_CLOSED)
         ->and($statement->paid_at)->toBeNull()
         ->and($statement->payment_source_id)->toBeNull()
-        ->and($purchase->status)->toBe('pending')
-        ->and($purchase->payment_date)->toBeNull();
+        ->and($firstPurchase->status)->toBe('pending')
+        ->and($firstPurchase->payment_date)->toBeNull()
+        ->and($secondPurchase->status)->toBe('pending')
+        ->and($secondPurchase->payment_date)->toBeNull();
 
     $this->assertDatabaseMissing('expenses', [
         'credit_card_statement_id' => $statement->id,

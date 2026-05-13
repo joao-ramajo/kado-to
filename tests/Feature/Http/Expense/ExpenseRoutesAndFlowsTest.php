@@ -366,6 +366,97 @@ test('quero editar uma compra no cartao de credito e sincronizar a fatura', func
     expect($statement->total_amount)->toBe(125000);
 });
 
+test('quero impedir que uma compra no cartao ultrapasse o limite da fatura na edicao', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('test')->plainTextToken;
+    $creditCard = Source::factory()->creditCard()->create([
+        'user_id' => $user->id,
+        'credit_limit' => 100000,
+        'statement_closing_day' => 5,
+        'statement_due_day' => 10,
+    ]);
+
+    $this->withHeader('Authorization', 'Bearer '.$token)
+        ->postJson(route('api.expenses.create'), [
+            'title' => 'Notebook',
+            'amount' => 80000,
+            'type' => 'expense',
+            'status' => 'pending',
+            'source_id' => $creditCard->id,
+            'purchase_date' => '2026-03-01',
+            'installment_total' => 1,
+        ])
+        ->assertCreated();
+
+    $expense = Expense::query()
+        ->where('user_id', $user->id)
+        ->where('source_id', $creditCard->id)
+        ->firstOrFail();
+
+    $response = $this->withHeader('Authorization', 'Bearer '.$token)
+        ->putJson(route('api.expenses.update', ['id' => $expense->id]), [
+            'title' => 'Notebook gamer',
+            'amount' => 110000,
+            'type' => 'expense',
+            'status' => 'pending',
+            'source_id' => $creditCard->id,
+        ]);
+
+    $response->assertStatus(400)
+        ->assertJson([
+            'message' => 'A compra excede o limite disponível desta fatura.',
+        ]);
+});
+
+test('quero editar uma compra no cartao reduzindo o valor e sincronizar a fatura', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('test')->plainTextToken;
+    $creditCard = Source::factory()->creditCard()->create([
+        'user_id' => $user->id,
+        'credit_limit' => 100000,
+        'statement_closing_day' => 5,
+        'statement_due_day' => 10,
+    ]);
+
+    $this->withHeader('Authorization', 'Bearer '.$token)
+        ->postJson(route('api.expenses.create'), [
+            'title' => 'Notebook',
+            'amount' => 80000,
+            'type' => 'expense',
+            'status' => 'pending',
+            'source_id' => $creditCard->id,
+            'purchase_date' => '2026-03-01',
+            'installment_total' => 1,
+        ])
+        ->assertCreated();
+
+    $expense = Expense::query()
+        ->where('user_id', $user->id)
+        ->where('source_id', $creditCard->id)
+        ->firstOrFail();
+
+    $statement = CreditCardStatement::query()
+        ->where('source_id', $creditCard->id)
+        ->firstOrFail();
+
+    $response = $this->withHeader('Authorization', 'Bearer '.$token)
+        ->putJson(route('api.expenses.update', ['id' => $expense->id]), [
+            'title' => 'Notebook gamer',
+            'amount' => 50000,
+            'type' => 'expense',
+            'status' => 'pending',
+            'source_id' => $creditCard->id,
+        ]);
+
+    $response->assertOk();
+
+    $expense->refresh();
+    $statement->refresh();
+
+    expect($expense->amount)->toBe(500.0);
+    expect($statement->total_amount)->toBe(50000);
+});
+
 test('ao editar uma despesa paga devo conseguir informar payment_date somente com data', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('test')->plainTextToken;

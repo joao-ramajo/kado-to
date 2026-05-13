@@ -131,3 +131,62 @@ test('bloqueia compra no cartão com tipo inválido ou status pago', function ()
         'source_id' => $creditCard->id,
     ]))->toThrow(DomainException::class, 'Compras no cartão devem ser quitadas pelo pagamento da fatura.');
 });
+
+test('permite compra no cartão exatamente no limite da fatura', function (): void {
+    $user = User::factory()->create();
+    $creditCard = Source::factory()->creditCard()->create([
+        'user_id' => $user->id,
+        'credit_limit' => 100000,
+        'statement_closing_day' => 5,
+        'statement_due_day' => 10,
+    ]);
+
+    resolve(CreateExpense::class)->execute([
+        'title' => 'Notebook',
+        'amount' => 100000,
+        'type' => 'expense',
+        'status' => 'pending',
+        'userId' => $user->id,
+        'source_id' => $creditCard->id,
+        'purchase_date' => '2026-03-06',
+        'installment_total' => 1,
+    ]);
+
+    $this->assertDatabaseHas('expenses', [
+        'user_id' => $user->id,
+        'source_id' => $creditCard->id,
+        'title' => 'Notebook',
+    ]);
+});
+
+test('bloqueia compra no cartão quando a fatura excede o limite', function (): void {
+    $user = User::factory()->create();
+    $creditCard = Source::factory()->creditCard()->create([
+        'user_id' => $user->id,
+        'credit_limit' => 100000,
+        'statement_closing_day' => 5,
+        'statement_due_day' => 10,
+    ]);
+
+    resolve(CreateExpense::class)->execute([
+        'title' => 'Compra inicial',
+        'amount' => 80000,
+        'type' => 'expense',
+        'status' => 'pending',
+        'userId' => $user->id,
+        'source_id' => $creditCard->id,
+        'purchase_date' => '2026-03-06',
+        'installment_total' => 1,
+    ]);
+
+    expect(fn () => resolve(CreateExpense::class)->execute([
+        'title' => 'Compra extra',
+        'amount' => 30000,
+        'type' => 'expense',
+        'status' => 'pending',
+        'userId' => $user->id,
+        'source_id' => $creditCard->id,
+        'purchase_date' => '2026-03-06',
+        'installment_total' => 1,
+    ]))->toThrow(DomainException::class, 'A compra excede o limite disponível desta fatura.');
+});
