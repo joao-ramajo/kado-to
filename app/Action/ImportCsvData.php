@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Action;
 
+use App\Models\CreditCardStatement;
 use App\Models\Category;
+use App\Models\Expense;
 use App\Models\Source;
+use App\Support\CreditCard\CreditCardStatementService;
 use App\Support\Logging\FormatsLogMessage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +36,7 @@ class ImportCsvData
 
     public function __construct(
         private readonly LoggerInterface $logger,
+        private readonly CreditCardStatementService $creditCardStatementService,
     ) {}
 
     public function execute(UploadedFile $file): bool
@@ -90,6 +94,7 @@ class ImportCsvData
             }
 
             $batch = [];
+            $statementIdsToSync = [];
 
             while (($data = fgetcsv($handle, 0, ';')) !== false) {
                 // 👇 proteção contra linhas quebradas
@@ -119,21 +124,43 @@ class ImportCsvData
                 }
 
                 $category = $this->findOrCreateCategory($row['CATEGORY_NAME']);
-                $sourceId = $this->findOrCreateSourceId($row['SOURCE_NAME'] ?? null);
+                $sourceId = $this->findOrCreateSourceId(
+                    sourceName: $row['SOURCE_NAME'] ?? null,
+                    sourceType: $row['SOURCE_TYPE'] ?? null,
+                    sourceColor: $row['SOURCE_COLOR'] ?? null,
+                    allowNegative: $row['SOURCE_ALLOW_NEGATIVE'] ?? null,
+                    creditLimit: $row['SOURCE_CREDIT_LIMIT'] ?? null,
+                    statementClosingDay: $row['SOURCE_STATEMENT_CLOSING_DAY'] ?? null,
+                    statementDueDay: $row['SOURCE_STATEMENT_DUE_DAY'] ?? null,
+                );
+                $cardSourceId = $this->resolveCardSourceId($row, $sourceId);
+                $statementId = $this->findOrCreateStatementId($row, $cardSourceId);
 
                 $batch[] = [
                     'title' => $row['TITLE'],
                     'amount' => (int) $row['AMOUNT'],
                     'status' => $row['STATUS'],
                     'type' => $row['TYPE'],
+                    'origin_type' => $this->readValue($row, 'ORIGIN_TYPE') ?? Expense::ORIGIN_DIRECT,
+                    'occurrence_type' => $this->readValue($row, 'OCCURRENCE_TYPE') ?? Expense::OCCURRENCE_DIRECT,
                     'payment_date' => $row['PAYMENT_DATE'] !== '-' ? $row['PAYMENT_DATE'] : null,
+                    'purchase_date' => $this->nullIfPlaceholder($this->readValue($row, 'PURCHASE_DATE')),
                     'due_date' => $row['DUE_DATE'] !== '-' ? $row['DUE_DATE'] : null,
+                    'credit_card_statement_id' => $statementId,
+                    'installment_group_id' => $this->nullIfPlaceholder($this->readValue($row, 'INSTALLMENT_GROUP_ID')),
+                    'installment_number' => $this->normalizeInteger($this->readValue($row, 'INSTALLMENT_NUMBER')),
+                    'installment_total' => $this->normalizeInteger($this->readValue($row, 'INSTALLMENT_TOTAL')),
                     'created_at' => $row['CREATED_AT'],
                     'updated_at' => now(),
                     'user_id' => $userId,
                     'category_id' => $category?->id,
                     'source_id' => $sourceId,
                 ];
+
+                if (is_int($statementId)) {
+                    $statementIdsToSync[$statementId] = $statementId;
+                    $this->syncStatementPayment($statementId, $row, $sourceId);
+                }
 
                 if (count($batch) >= 100) {
                     DB::table('expenses')->insert($batch);
@@ -146,6 +173,11 @@ class ImportCsvData
             }
 
             fclose($handle);
+
+            foreach ($statementIdsToSync as $statementId) {
+                $this->creditCardStatementService->syncById($statementId);
+            }
+
             DB::commit();
 
             $this->logger->info($this->formatLogMessage('completed'), [
@@ -222,7 +254,16 @@ class ImportCsvData
         return $category;
     }
 
-    private function findOrCreateSourceId(?string $sourceName): ?int
+    private function findOrCreateSourceId(
+        ?string $sourceName,
+        ?string $sourceType = null,
+        ?string $sourceColor = null,
+        ?string $allowNegative = null,
+        ?string $creditLimit = null,
+        ?string $statementClosingDay = null,
+        ?string $statementDueDay = null,
+        bool $useDefaultAlias = true,
+    ): ?int
     {
         $userId = Auth::id();
         if (! is_int($userId)) {
@@ -235,10 +276,19 @@ class ImportCsvData
         if (
             $normalizedSourceName === ''
             || $normalizedSourceName === '-'
-            || in_array($normalizedSourceAlias, self::DEFAULT_SOURCE_ALIASES, true)
+            || ($useDefaultAlias && in_array($normalizedSourceAlias, self::DEFAULT_SOURCE_ALIASES, true))
         ) {
             return $this->getDefaultSourceId();
         }
+
+        $metadata = $this->buildSourceMetadata(
+            $sourceType,
+            $sourceColor,
+            $allowNegative,
+            $creditLimit,
+            $statementClosingDay,
+            $statementDueDay,
+        );
 
         $source = Source::query()
             ->where('user_id', $userId)
@@ -246,16 +296,168 @@ class ImportCsvData
             ->first();
 
         if (! $source) {
-            $source = Source::query()->create([
+            $source = Source::query()->create(array_merge([
                 'user_id' => $userId,
                 'name' => $normalizedSourceName,
-                'color' => '#64748B',
                 'is_default' => false,
-                'allow_negative' => false,
-            ]);
+            ], $metadata));
+        } else {
+            $source->fill($metadata);
+            $source->save();
         }
 
         return $source->id;
+    }
+
+    /** @param array<string, string> $row */
+    private function resolveCardSourceId(array $row, ?int $expenseSourceId): ?int
+    {
+        $cardSourceName = $this->readValue($row, 'CARD_SOURCE_NAME');
+
+        if ($cardSourceName !== null) {
+            return $this->findOrCreateSourceId(
+                sourceName: $cardSourceName,
+                sourceType: Source::TYPE_CREDIT_CARD,
+                sourceColor: $this->readValue($row, 'CARD_SOURCE_COLOR'),
+                allowNegative: '0',
+                creditLimit: $this->readValue($row, 'CARD_SOURCE_CREDIT_LIMIT'),
+                statementClosingDay: $this->readValue($row, 'CARD_SOURCE_STATEMENT_CLOSING_DAY'),
+                statementDueDay: $this->readValue($row, 'CARD_SOURCE_STATEMENT_DUE_DAY'),
+                useDefaultAlias: false,
+            );
+        }
+
+        $occurrenceType = $this->readValue($row, 'OCCURRENCE_TYPE');
+        $originType = $this->readValue($row, 'ORIGIN_TYPE');
+
+        if (
+            $expenseSourceId !== null
+            && ($occurrenceType === Expense::OCCURRENCE_PURCHASE || $originType === Expense::ORIGIN_CREDIT_CARD)
+        ) {
+            return $expenseSourceId;
+        }
+
+        return null;
+    }
+
+    /** @param array<string, string> $row */
+    private function findOrCreateStatementId(array $row, ?int $cardSourceId): ?int
+    {
+        if ($cardSourceId === null) {
+            return null;
+        }
+
+        $referenceMonth = $this->readValue($row, 'STATEMENT_REFERENCE_MONTH');
+        if ($referenceMonth === null) {
+            return null;
+        }
+
+        $statement = CreditCardStatement::query()
+            ->where('source_id', $cardSourceId)
+            ->whereDate('reference_month', $referenceMonth)
+            ->first();
+
+        $attributes = [
+            'closing_at' => $this->readValue($row, 'STATEMENT_CLOSING_AT') ?? $this->readValue($row, 'DUE_DATE') ?? $referenceMonth,
+            'due_at' => $this->readValue($row, 'STATEMENT_DUE_AT') ?? $this->readValue($row, 'DUE_DATE') ?? $referenceMonth,
+        ];
+
+        if ($statement === null) {
+            $statement = CreditCardStatement::query()->create([
+                'source_id' => $cardSourceId,
+                'reference_month' => $referenceMonth,
+                'closing_at' => $attributes['closing_at'],
+                'due_at' => $attributes['due_at'],
+                'status' => CreditCardStatement::STATUS_OPEN,
+                'total_amount' => 0,
+            ]);
+        } else {
+            $statement->fill($attributes);
+            $statement->save();
+        }
+
+        return $statement->id;
+    }
+
+    /** @param array<string, string> $row */
+    private function syncStatementPayment(int $statementId, array $row, ?int $paymentSourceId): void
+    {
+        if ($this->readValue($row, 'OCCURRENCE_TYPE') !== Expense::OCCURRENCE_INVOICE_PAYMENT) {
+            return;
+        }
+
+        if ($paymentSourceId === null) {
+            return;
+        }
+
+        CreditCardStatement::query()
+            ->whereKey($statementId)
+            ->update([
+                'paid_at' => $this->readValue($row, 'STATEMENT_PAID_AT')
+                    ?? $this->readValue($row, 'PAYMENT_DATE')
+                    ?? now(),
+                'payment_source_id' => $paymentSourceId,
+            ]);
+    }
+
+    private function buildSourceMetadata(
+        ?string $sourceType,
+        ?string $sourceColor,
+        ?string $allowNegative,
+        ?string $creditLimit,
+        ?string $statementClosingDay,
+        ?string $statementDueDay,
+    ): array {
+        $type = $this->nullIfPlaceholder($sourceType) ?? Source::TYPE_CASH_LIKE;
+        $isCreditCard = $type === Source::TYPE_CREDIT_CARD;
+
+        return [
+            'type' => $type,
+            'color' => $this->nullIfPlaceholder($sourceColor) ?? '#64748B',
+            'allow_negative' => $this->normalizeBoolean($allowNegative),
+            'credit_limit' => $isCreditCard ? $this->normalizeInteger($creditLimit) : null,
+            'statement_closing_day' => $isCreditCard ? $this->normalizeInteger($statementClosingDay) : null,
+            'statement_due_day' => $isCreditCard ? $this->normalizeInteger($statementDueDay) : null,
+        ];
+    }
+
+    /** @param array<string, string> $row */
+    private function readValue(array $row, string $key): ?string
+    {
+        if (! array_key_exists($key, $row)) {
+            return null;
+        }
+
+        return $this->nullIfPlaceholder($row[$key]);
+    }
+
+    private function nullIfPlaceholder(?string $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        if ($normalized === '' || $normalized === '-') {
+            return null;
+        }
+
+        return $normalized;
+    }
+
+    private function normalizeInteger(?string $value): ?int
+    {
+        $normalized = $this->nullIfPlaceholder($value);
+
+        if ($normalized === null || ! is_numeric($normalized)) {
+            return null;
+        }
+
+        return (int) $normalized;
+    }
+
+    private function normalizeBoolean(?string $value): bool
+    {
+        $normalized = mb_strtolower((string) $this->nullIfPlaceholder($value));
+
+        return in_array($normalized, ['1', 'true', 'yes', 'sim'], true);
     }
 
     private function getDefaultSourceId(): ?int

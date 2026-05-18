@@ -500,4 +500,5 @@ test('deve exportar csv com coluna de fonte', function (): void {
     $content = $response->streamedContent();
     expect($content)->toContain('SOURCE_NAME');
     expect($content)->toContain('Conta PJ');
+    expect($content)->toContain('SOURCE_TYPE');
 });

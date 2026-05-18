@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Action\Xlsx;
 
 use App\Domain\Interfaces\XlsxSheet;
+use App\Models\Expense;
+use App\Models\Source;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +20,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ExpensesListSheet implements XlsxSheet
 {
-    private const HEADER_RANGE = 'A1:G1';
+    private const HEADER_RANGE = 'A1:L1';
 
     private const HEADER_ROW_HEIGHT = 32;
 
@@ -53,7 +55,7 @@ class ExpensesListSheet implements XlsxSheet
         $this->applyCellFormats($sheet, $lastRow);
         $this->applyConditionalFormatting($sheet, $rawData);
         $this->freezeHeader($sheet);
-        $sheet->setAutoFilter('A1:G'.$lastRow);
+        $sheet->setAutoFilter('A1:L'.$lastRow);
     }
 
     private function getUserId(): int
@@ -80,9 +82,14 @@ class ExpensesListSheet implements XlsxSheet
             'B' => 18, // Valor
             'C' => 16, // Status
             'D' => 24, // Categoria
-            'E' => 16, // Tipo
-            'F' => 24, // Fonte
-            'G' => 20, // Data
+            'E' => 16, // Data da Compra
+            'F' => 22, // Movimento
+            'G' => 24, // Fonte
+            'H' => 28, // Cartão/Fatura
+            'I' => 12, // Parcela
+            'J' => 16, // Tipo
+            'K' => 16, // Pagamento
+            'L' => 16, // Vencimento
         ];
 
         foreach ($widths as $column => $width) {
@@ -138,7 +145,7 @@ class ExpensesListSheet implements XlsxSheet
             return;
         }
 
-        $sheet->getStyle('A2:G'.$lastRow)->applyFromArray([
+        $sheet->getStyle('A2:L'.$lastRow)->applyFromArray([
             'font' => [
                 'size' => 10,
                 'color' => ['rgb' => self::HEADER_FONT],
@@ -156,7 +163,7 @@ class ExpensesListSheet implements XlsxSheet
 
         for ($row = 2; $row <= $lastRow; $row++) {
             if ($row % 2 === 0) {
-                $sheet->getStyle(sprintf('A%d:G%d', $row, $row))->applyFromArray([
+                $sheet->getStyle(sprintf('A%d:L%d', $row, $row))->applyFromArray([
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => self::STRIPE_BG],
@@ -172,9 +179,14 @@ class ExpensesListSheet implements XlsxSheet
         $this->applyValueAlignment($sheet, $lastRow);
         $this->applyStatusAlignment($sheet, $lastRow);
         $this->applyCategoryAlignment($sheet, $lastRow);
-        $this->applyTypeAlignment($sheet, $lastRow);
+        $this->applyDateAlignment($sheet, $lastRow, 'E');
+        $this->applyOccurrenceAlignment($sheet, $lastRow);
         $this->applySourceAlignment($sheet, $lastRow);
-        $this->applyDateAlignment($sheet, $lastRow);
+        $this->applyStatementAlignment($sheet, $lastRow);
+        $this->applyInstallmentAlignment($sheet, $lastRow);
+        $this->applyTypeAlignment($sheet, $lastRow);
+        $this->applyDateAlignment($sheet, $lastRow, 'L');
+        $this->applyDateAlignment($sheet, $lastRow, 'K');
     }
 
     private function applyDescriptionAlignment(Worksheet $sheet, int $lastRow): void
@@ -214,16 +226,37 @@ class ExpensesListSheet implements XlsxSheet
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }
 
-    private function applySourceAlignment(Worksheet $sheet, int $lastRow): void
+    private function applyOccurrenceAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('F2:F'.$lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_LEFT);
     }
 
-    private function applyDateAlignment(Worksheet $sheet, int $lastRow): void
+    private function applySourceAlignment(Worksheet $sheet, int $lastRow): void
     {
         $sheet->getStyle('G2:G'.$lastRow)
+            ->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT);
+    }
+
+    private function applyStatementAlignment(Worksheet $sheet, int $lastRow): void
+    {
+        $sheet->getStyle('H2:H'.$lastRow)
+            ->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT);
+    }
+
+    private function applyInstallmentAlignment(Worksheet $sheet, int $lastRow): void
+    {
+        $sheet->getStyle('I2:I'.$lastRow)
+            ->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    }
+
+    private function applyDateAlignment(Worksheet $sheet, int $lastRow, string $column): void
+    {
+        $sheet->getStyle($column.'2:'.$column.$lastRow)
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }
@@ -238,12 +271,16 @@ class ExpensesListSheet implements XlsxSheet
             ->getNumberFormat()
             ->setFormatCode('[$R$-416] #,##0.00');
 
-        $sheet->getStyle('G2:G'.$lastRow)
+        $sheet->getStyle('E2:E'.$lastRow)
+            ->getNumberFormat()
+            ->setFormatCode(NumberFormat::FORMAT_DATE_DDMMYYYY);
+
+        $sheet->getStyle('K2:L'.$lastRow)
             ->getNumberFormat()
             ->setFormatCode(NumberFormat::FORMAT_DATE_DDMMYYYY);
     }
 
-    /** @param array<int, object{status: string, type: string}> $rawData */
+    /** @param array<int, object{status: string, type: string, occurrence_type: string}> $rawData */
     private function applyConditionalFormatting(Worksheet $sheet, array $rawData): void
     {
         foreach ($rawData as $index => $row) {
@@ -251,6 +288,7 @@ class ExpensesListSheet implements XlsxSheet
 
             $this->formatStatus($sheet, $rowNum, $row->status);
             $this->formatType($sheet, $rowNum, $row->type);
+            $this->formatOccurrence($sheet, $rowNum, $row->occurrence_type);
         }
     }
 
@@ -291,7 +329,7 @@ class ExpensesListSheet implements XlsxSheet
 
     private function formatAsIncome(Worksheet $sheet, int $rowNum): void
     {
-        $sheet->getStyle('E'.$rowNum)->applyFromArray([
+        $sheet->getStyle('J'.$rowNum)->applyFromArray([
             'font' => [
                 'color' => ['rgb' => '1D4ED8'],
             ],
@@ -307,11 +345,34 @@ class ExpensesListSheet implements XlsxSheet
 
     private function formatAsExpense(Worksheet $sheet, int $rowNum): void
     {
-        $sheet->getStyle('E'.$rowNum)->applyFromArray([
+        $sheet->getStyle('J'.$rowNum)->applyFromArray([
             'font' => [
                 'color' => ['rgb' => '334155'],
             ],
         ]);
+    }
+
+    private function formatOccurrence(Worksheet $sheet, int $rowNum, string $occurrenceType): void
+    {
+        if ($occurrenceType === Expense::OCCURRENCE_PURCHASE) {
+            $sheet->getStyle('F'.$rowNum)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => '7C3AED'],
+                ],
+            ]);
+
+            return;
+        }
+
+        if ($occurrenceType === Expense::OCCURRENCE_INVOICE_PAYMENT) {
+            $sheet->getStyle('F'.$rowNum)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'C2410C'],
+                ],
+            ]);
+        }
     }
 
     private function freezeHeader(Worksheet $sheet): void
@@ -327,9 +388,14 @@ class ExpensesListSheet implements XlsxSheet
             'Valor',
             'Status',
             'Categoria',
-            'Tipo',
+            'Data da Compra',
+            'Movimento',
             'Fonte',
+            'Cartão / Fatura',
+            'Parcela',
+            'Tipo',
             'Data de Pagamento',
+            'Vencimento',
         ];
     }
 
@@ -340,8 +406,16 @@ class ExpensesListSheet implements XlsxSheet
      *     status: string,
      *     category: string|null,
      *     type: string,
-     *     source: string|null,
-     *     payment_date: string|null
+     *     source_name: string|null,
+     *     source_type: string|null,
+     *     occurrence_type: string,
+     *     card_source_name: string|null,
+     *     installment_number: int|string|null,
+     *     installment_total: int|string|null,
+     *     purchase_date: string|null,
+     *     payment_date: string|null,
+     *     due_date: string|null,
+     *     statement_reference_month: string|null
      * }>
      */
     private function getValues(): array
@@ -349,7 +423,9 @@ class ExpensesListSheet implements XlsxSheet
         $values = DB::table('expenses')
             ->where('expenses.user_id', $this->getUserId())
             ->leftJoin('categories', 'expenses.category_id', '=', 'categories.id')
-            ->leftJoin('sources', 'expenses.source_id', '=', 'sources.id')
+            ->leftJoin('sources as expense_sources', 'expenses.source_id', '=', 'expense_sources.id')
+            ->leftJoin('credit_card_statements', 'expenses.credit_card_statement_id', '=', 'credit_card_statements.id')
+            ->leftJoin('sources as card_sources', 'credit_card_statements.source_id', '=', 'card_sources.id')
             ->latest('expenses.created_at')
             ->select(
                 'expenses.title',
@@ -357,8 +433,16 @@ class ExpensesListSheet implements XlsxSheet
                 'expenses.status',
                 'categories.name as category',
                 'expenses.type',
-                'sources.name as source',
-                'expenses.payment_date'
+                'expense_sources.name as source_name',
+                'expense_sources.type as source_type',
+                'expenses.occurrence_type',
+                'card_sources.name as card_source_name',
+                'expenses.installment_number',
+                'expenses.installment_total',
+                'expenses.purchase_date',
+                'expenses.payment_date',
+                'expenses.due_date',
+                'credit_card_statements.reference_month as statement_reference_month',
             )
             ->get()
             ->toArray();
@@ -369,8 +453,16 @@ class ExpensesListSheet implements XlsxSheet
          *     status: string,
          *     category: string|null,
          *     type: string,
-         *     source: string|null,
-         *     payment_date: string|null
+         *     source_name: string|null,
+         *     source_type: string|null,
+         *     occurrence_type: string,
+         *     card_source_name: string|null,
+         *     installment_number: int|string|null,
+         *     installment_total: int|string|null,
+         *     purchase_date: string|null,
+         *     payment_date: string|null,
+         *     due_date: string|null,
+         *     statement_reference_month: string|null
          * }> $values
          */
         return $values;
@@ -383,8 +475,16 @@ class ExpensesListSheet implements XlsxSheet
      *     status: string,
      *     category: string|null,
      *     type: string,
-     *     source: string|null,
-     *     payment_date: string|null
+     *     source_name: string|null,
+     *     source_type: string|null,
+     *     occurrence_type: string,
+     *     card_source_name: string|null,
+     *     installment_number: int|string|null,
+     *     installment_total: int|string|null,
+     *     purchase_date: string|null,
+     *     payment_date: string|null,
+     *     due_date: string|null,
+     *     statement_reference_month: string|null
      * }> $values
      * @return list<list<string|float|null>>
      */
@@ -394,10 +494,15 @@ class ExpensesListSheet implements XlsxSheet
             $row->title,
             $this->normalizeMoney((int) $row->amount),
             $this->translateStatus($row->status),
-            $row->category ?? '-',
+            $row->category,
+            $this->toExcelDate($row->purchase_date),
+            $this->translateOccurrence($row->occurrence_type),
+            $row->source_name,
+            $this->formatStatementContext($row),
+            $this->formatInstallment($row->installment_number, $row->installment_total),
             $this->translateType($row->type),
-            $row->source ?? '-',
             $this->toExcelDate($row->payment_date),
+            $this->toExcelDate($row->due_date),
         ], $values));
     }
 
@@ -439,5 +544,46 @@ class ExpensesListSheet implements XlsxSheet
             'expense' => 'Despesa',
             default => ucfirst($type),
         };
+    }
+
+    private function translateOccurrence(string $occurrenceType): string
+    {
+        return match ($occurrenceType) {
+            Expense::OCCURRENCE_PURCHASE => 'Compra no cartão',
+            Expense::OCCURRENCE_INVOICE_PAYMENT => 'Pagamento de fatura',
+            Expense::OCCURRENCE_DIRECT => 'Lançamento direto',
+            default => ucfirst($occurrenceType),
+        };
+    }
+
+    private function formatStatementContext(object $row): ?string
+    {
+        if (! isset($row->statement_reference_month) || ! is_string($row->statement_reference_month)) {
+            return null;
+        }
+
+        $cardSourceName = $row->card_source_name ?? null;
+        if (! is_string($cardSourceName) || $cardSourceName === '') {
+            $cardSourceName = $row->source_type === Source::TYPE_CREDIT_CARD
+                ? ($row->source_name ?? null)
+                : null;
+        }
+
+        $referenceMonth = Date::parse($row->statement_reference_month)->format('m/Y');
+
+        if ($cardSourceName === null || $cardSourceName === '') {
+            return $referenceMonth;
+        }
+
+        return $cardSourceName.' - '.$referenceMonth;
+    }
+
+    private function formatInstallment(int|string|null $installmentNumber, int|string|null $installmentTotal): ?string
+    {
+        if ($installmentNumber === null || $installmentTotal === null) {
+            return null;
+        }
+
+        return (int) $installmentNumber.'/'.(int) $installmentTotal;
     }
 }

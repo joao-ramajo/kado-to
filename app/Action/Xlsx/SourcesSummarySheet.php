@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Action\Xlsx;
 
 use App\Domain\Interfaces\XlsxSheet;
+use App\Models\CreditCardStatement;
+use App\Models\Expense;
+use App\Models\Source;
+use DateTimeInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SourcesSummarySheet implements XlsxSheet
@@ -25,25 +30,12 @@ class SourcesSummarySheet implements XlsxSheet
 
     public function addTo(Spreadsheet $spreadsheet): void
     {
-        $sheet = new Worksheet($spreadsheet, 'Resumo por Fonte');
+        $sheet = new Worksheet($spreadsheet, 'Resumo Financeiro');
         $spreadsheet->addSheet($sheet);
 
-        $this->setupHeaders($sheet);
-
-        $rawData = $this->getValues();
-        $data = $this->normalizeValues($rawData);
-
-        $sheet->fromArray($data, null, 'A2');
-
-        $lastRow = count($data) + 1;
-        $totalRow = $lastRow;
-
         $this->setupColumnWidths($sheet);
-        $this->applyHeaderStyles($sheet);
-        $this->applyRowStyles($sheet, $lastRow, $totalRow);
-        $this->applyCellFormats($sheet, $lastRow);
-        $this->freezeHeader($sheet);
-        $sheet->setAutoFilter('A1:D'.$lastRow);
+        $nextRow = $this->renderSourcesSection($sheet);
+        $this->renderStatementsSection($sheet, $nextRow + 2);
     }
 
     private function getUserId(): int
@@ -57,93 +49,165 @@ class SourcesSummarySheet implements XlsxSheet
         return 0;
     }
 
-    private function setupHeaders(Worksheet $sheet): void
-    {
-        $sheet->fromArray([
-            ['Fonte', 'Total Recebido', 'Total Gasto', 'Saldo'],
-        ], null, 'A1');
-    }
-
     private function setupColumnWidths(Worksheet $sheet): void
     {
-        $sheet->getColumnDimension('A')->setWidth(30);
+        $sheet->getColumnDimension('A')->setWidth(28);
         $sheet->getColumnDimension('B')->setWidth(18);
         $sheet->getColumnDimension('C')->setWidth(18);
         $sheet->getColumnDimension('D')->setWidth(18);
+        $sheet->getColumnDimension('E')->setWidth(18);
+        $sheet->getColumnDimension('F')->setWidth(24);
+    }
+
+    private function renderSourcesSection(Worksheet $sheet): int
+    {
+        $sheet->setCellValue('A1', 'Totais por Fonte');
+        $sheet->fromArray([
+            ['Fonte', 'Total ganho', 'Total gasto', 'Saldo final'],
+        ], null, 'A2');
+        $rows = $this->getSourceRows();
+        if ($rows !== []) {
+            $sheet->fromArray($rows, null, 'A3');
+        }
+
+        $lastRow = max(3, count($rows) + 2);
+
+        $this->applySectionTitleStyle($sheet, 'A1:D1');
+        $this->applyHeaderStyles($sheet, 'A2:D2');
+        $this->applyBodyStyles($sheet, 'A3:D'.$lastRow);
+        $sheet->getStyle('B3:D'.$lastRow)
+            ->getNumberFormat()
+            ->setFormatCode('[$R$-416] #,##0.00');
+
+        return $lastRow;
     }
 
     /**
-     * @return array<int, object{
-     *     source: string|null,
-     *     total_income: int|string,
-     *     total_expense: int|string
-     * }>
+     * @return list<list<string|float|null>>
      */
-    private function getValues(): array
+    private function getSourceRows(): array
     {
-        $values = DB::table('expenses')
-            ->leftJoin('sources', 'sources.id', '=', 'expenses.source_id')
-            ->where('expenses.user_id', $this->getUserId())
-            ->selectRaw('
-                sources.name as source,
-                SUM(CASE WHEN expenses.type = "income" THEN expenses.amount ELSE 0 END) as total_income,
-                SUM(CASE WHEN expenses.type = "expense" THEN expenses.amount ELSE 0 END) as total_expense
-            ')
-            ->groupBy('sources.name')
-            ->get()
-            ->toArray();
+        $rows = Source::query()
+            ->where('user_id', $this->getUserId())
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get();
 
-        /** @var array<int, object{
-         *     source: string|null,
-         *     total_income: int|string,
-         *     total_expense: int|string
-         * }> $values
-         */
-        return $values;
-    }
+        /** @var list<list<string|float|null>> */
+        return $rows->map(function (Source $source): array {
+            $income = (int) Expense::query()
+                ->where('source_id', $source->id)
+                ->where('type', 'income')
+                ->sum('amount');
 
-    /**
-     * @param array<int, object{
-     *     source: string|null,
-     *     total_income: int|string,
-     *     total_expense: int|string
-     * }> $values
-     * @return list<list<string|float>>
-     */
-    private function normalizeValues(array $values): array
-    {
-        $totalIncome = 0;
-        $totalExpense = 0;
+            $expenseQuery = Expense::query()
+                ->where('source_id', $source->id)
+                ->where('type', 'expense');
 
-        $rows = array_values(array_map(function (object $row) use (&$totalIncome, &$totalExpense): array {
-            $income = (int) $row->total_income;
-            $expense = (int) $row->total_expense;
+            if ($source->type === Source::TYPE_CREDIT_CARD) {
+                $expenseQuery->where('occurrence_type', Expense::OCCURRENCE_PURCHASE);
+            } else {
+                $expenseQuery->where('occurrence_type', '!=', Expense::OCCURRENCE_PURCHASE);
+            }
 
-            $totalIncome += $income;
-            $totalExpense += $expense;
+            $expense = (int) $expenseQuery->sum('amount');
+            $finalBalance = $source->type === Source::TYPE_CREDIT_CARD
+                ? $this->normalizeMoney(((int) $source->credit_limit) - $expense)
+                : $this->normalizeMoney($income - $expense);
 
             return [
-                $row->source ?? '—',
+                $source->name,
                 $this->normalizeMoney($income),
                 $this->normalizeMoney($expense),
-                $this->normalizeMoney($income - $expense),
+                $finalBalance,
             ];
-        }, $values));
-
-        // Linha de total
-        $rows[] = [
-            'TOTAL',
-            $this->normalizeMoney($totalIncome),
-            $this->normalizeMoney($totalExpense),
-            $this->normalizeMoney($totalIncome - $totalExpense),
-        ];
-
-        return $rows;
+        })->values()->all();
     }
 
-    private function applyHeaderStyles(Worksheet $sheet): void
+    private function renderStatementsSection(Worksheet $sheet, int $startRow): void
     {
-        $sheet->getStyle('A1:D1')->applyFromArray([
+        $sheet->setCellValue('A'.$startRow, 'Cartões e Faturas');
+        $sheet->fromArray([
+            ['Cartão', 'Referência', 'Status da fatura', 'Valor da fatura', 'Pago em', 'Fonte de pagamento'],
+        ], null, 'A'.($startRow + 1));
+
+        $rows = $this->getStatementRows();
+        $dataStartRow = $startRow + 2;
+
+        if ($rows !== []) {
+            $sheet->fromArray($rows, null, 'A'.$dataStartRow);
+        }
+
+        $lastRow = max($dataStartRow, count($rows) + $startRow + 1);
+
+        $this->applySectionTitleStyle($sheet, 'A'.$startRow.':F'.$startRow);
+        $this->applyHeaderStyles($sheet, 'A'.($startRow + 1).':F'.($startRow + 1));
+        $this->applyBodyStyles($sheet, 'A'.$dataStartRow.':F'.$lastRow);
+        $sheet->getStyle('D'.$dataStartRow.':D'.$lastRow)
+            ->getNumberFormat()
+            ->setFormatCode('[$R$-416] #,##0.00');
+        $sheet->getStyle('E'.$dataStartRow.':E'.$lastRow)
+            ->getNumberFormat()
+            ->setFormatCode(NumberFormat::FORMAT_DATE_DDMMYYYY);
+        $sheet->setAutoFilter('A'.($startRow + 1).':F'.$lastRow);
+        $sheet->freezePane('A'.$dataStartRow);
+    }
+
+    /**
+     * @return list<list<string|float|null>>
+     */
+    private function getStatementRows(): array
+    {
+        $rows = CreditCardStatement::query()
+            ->join('sources as card_sources', 'credit_card_statements.source_id', '=', 'card_sources.id')
+            ->leftJoin('sources as payment_sources', 'credit_card_statements.payment_source_id', '=', 'payment_sources.id')
+            ->where('card_sources.user_id', $this->getUserId())
+            ->orderByDesc('credit_card_statements.reference_month')
+            ->select(
+                'card_sources.name as card_name',
+                'credit_card_statements.reference_month',
+                'credit_card_statements.status',
+                'credit_card_statements.total_amount',
+                'credit_card_statements.paid_at',
+                'payment_sources.name as payment_source_name',
+            )
+            ->get();
+
+        /** @var list<list<string|float|null>> */
+        return $rows->map(function (object $row): array {
+            return [
+                (string) $row->card_name,
+                $this->formatReferenceMonth((string) $row->reference_month),
+                $this->translateStatementStatus((string) $row->status),
+                $this->normalizeMoney((int) $row->total_amount),
+                $this->toExcelDate($row->paid_at),
+                is_string($row->payment_source_name) ? $row->payment_source_name : null,
+            ];
+        })->values()->all();
+    }
+
+    private function applySectionTitleStyle(Worksheet $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+                'color' => ['rgb' => self::HEADER_FONT],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E5E7EB'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_LEFT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+    }
+
+    private function applyHeaderStyles(Worksheet $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
             'font' => [
                 'bold' => true,
                 'size' => 11,
@@ -164,17 +228,11 @@ class SourcesSummarySheet implements XlsxSheet
                 ],
             ],
         ]);
-
-        $sheet->getRowDimension(1)->setRowHeight(32);
     }
 
-    private function applyRowStyles(Worksheet $sheet, int $lastRow, int $totalRow): void
+    private function applyBodyStyles(Worksheet $sheet, string $range): void
     {
-        if ($lastRow < 2) {
-            return;
-        }
-
-        $sheet->getStyle('A2:D'.$lastRow)->applyFromArray([
+        $sheet->getStyle($range)->applyFromArray([
             'font' => [
                 'size' => 10,
                 'color' => ['rgb' => self::HEADER_FONT],
@@ -187,19 +245,15 @@ class SourcesSummarySheet implements XlsxSheet
             ],
         ]);
 
-        for ($i = 2; $i <= $lastRow; $i++) {
-            $sheet->getRowDimension($i)->setRowHeight(22);
+        [$start, $end] = explode(':', $range);
+        $startRow = (int) preg_replace('/\D/', '', $start);
+        $endRow = (int) preg_replace('/\D/', '', $end);
+        $startColumn = preg_replace('/\d/', '', $start) ?: 'A';
+        $endColumn = preg_replace('/\d/', '', $end) ?: 'A';
 
-            $sheet->getStyle(sprintf('A%d:D%d', $i, $i))
-                ->getAlignment()
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            $sheet->getStyle(sprintf('B%d:D%d', $i, $i))
-                ->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-            if ($i % 2 === 0) {
-                $sheet->getStyle(sprintf('A%d:D%d', $i, $i))->applyFromArray([
+        for ($row = $startRow; $row <= $endRow; $row++) {
+            if ($row % 2 === 0) {
+                $sheet->getStyle(sprintf('%s%d:%s%d', $startColumn, $row, $endColumn, $row))->applyFromArray([
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => self::STRIPE_BG],
@@ -207,37 +261,42 @@ class SourcesSummarySheet implements XlsxSheet
                 ]);
             }
         }
-
-        $sheet->getStyle(sprintf('A%d:D%d', $totalRow, $totalRow))->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => self::HEADER_FONT],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'E5E7EB'],
-            ],
-        ]);
-    }
-
-    private function freezeHeader(Worksheet $sheet): void
-    {
-        $sheet->freezePane('A2');
-    }
-
-    private function applyCellFormats(Worksheet $sheet, int $lastRow): void
-    {
-        if ($lastRow < 2) {
-            return;
-        }
-
-        $sheet->getStyle('B2:D'.$lastRow)
-            ->getNumberFormat()
-            ->setFormatCode('[$R$-416] #,##0.00');
     }
 
     private function normalizeMoney(int|string $amount): float
     {
         return ((int) $amount) / 100;
+    }
+
+    private function formatReferenceMonth(string $referenceMonth): string
+    {
+        return date('m/Y', strtotime($referenceMonth));
+    }
+
+    private function translateStatementStatus(string $status): string
+    {
+        return match ($status) {
+            CreditCardStatement::STATUS_OPEN => 'Aberta',
+            CreditCardStatement::STATUS_CLOSED => 'Fechada',
+            CreditCardStatement::STATUS_PAID => 'Paga',
+            default => ucfirst($status),
+        };
+    }
+
+    private function toExcelDate(mixed $date): ?float
+    {
+        if ($date instanceof DateTimeInterface) {
+            $timestamp = $date->getTimestamp();
+        } elseif (is_string($date) && trim($date) !== '') {
+            $timestamp = strtotime($date);
+        } else {
+            $timestamp = false;
+        }
+
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return 25569 + ($timestamp / 86400);
     }
 }

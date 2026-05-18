@@ -19,6 +19,7 @@ class GenerateExpensesXlsxAction
     public function __construct(
         private readonly ExpensesListSheet $expensesListSheet,
         private readonly SourcesSummarySheet $sourcesSummarySheet,
+        private readonly InsightsSheet $insightsSheet,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -31,6 +32,7 @@ class GenerateExpensesXlsxAction
         $spreadsheet = new Spreadsheet;
         $this->expensesListSheet->addTo($spreadsheet);
         $this->sourcesSummarySheet->addTo($spreadsheet);
+        $this->insightsSheet->addTo($spreadsheet);
 
         $response = $this->generateResponse($spreadsheet);
 
