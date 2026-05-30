@@ -39,7 +39,7 @@ return [
 
     'url' => [
         'dev' => 'http://localhost:8080',
-        'prod' => 'https://kado-po.salgadinhos-web.blog',
+        'prod' => 'https://kado-to.salgadinhos-web.blog',
     ],
 
 ];
