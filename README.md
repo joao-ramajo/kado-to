@@ -1,208 +1,128 @@
-# 💰 Fillament Wallet
+# 💰 Fillament Wallet API
 
-> Um gerenciador de gastos pessoais simples, eficiente e sem complicações
+![Laravel](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Sanctum](https://img.shields.io/badge/Sanctum-API%20Auth-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![Pest](https://img.shields.io/badge/Pest-Tests-7A1FA2?style=for-the-badge&logo=php&logoColor=white)
+![PHPStan](https://img.shields.io/badge/PHPStan-Level%2010-4F5D95?style=for-the-badge&logo=php&logoColor=white)
+![Rector](https://img.shields.io/badge/Rector-Refactoring-6E4AFF?style=for-the-badge&logo=php&logoColor=white)
 
-[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+Kado-to é a API central para o projeto Kado, sendo seu backend responsável por lidar com as operações de controle de gastos, é uma 
 
-[🔗 Ver Demo ao Vivo](https://fillament-wallet.salgadinhos-web.blog)
 
----
+## Funcionalidades Principais
 
-## 📖 Sobre o Projeto
+O sistema permite cadastro e autenticação de usuários com emissão de token, criação automática de uma fonte principal de saldo e organização de lançamentos financeiros por categoria e origem.
 
-**Fillament Wallet** é um gerenciador de gastos pessoais que nasceu da necessidade de ter uma ferramenta **gratuita, simples e confiável** para controle financeiro. Diferente de outros aplicativos disponíveis no mercado, este projeto foca em:
+Entre as funcionalidades disponíveis estão:
 
-- ✅ **Simplicidade** - Interface limpa sem funcionalidades desnecessárias
-- ✅ **Confiabilidade** - Seus dados sob seu controle
-- ✅ **Experiência focada** - Sem distrações, apenas o essencial para manter suas finanças em dia
+- Cadastro e login de usuários com autenticação via token usando `Laravel Sanctum`
+- CRUD de despesas e receitas
+- Marcação manual de despesas como pagas
+- Cadastro e edição de categorias personalizadas com cor
+- Gestão de fontes financeiras, como saldo principal, carteiras e cartões de crédito
+- Dashboard com resumo financeiro, totais consolidados e cards configuráveis por usuário
+- Listagem de despesas com filtros por status, categoria, mês e busca textual
+- Importação de despesas por arquivo CSV
+- Exportação de dados em CSV e XLSX
+- Geração e pagamento de faturas de cartão de crédito, incluindo compras parceladas
 
-### 🎯 Problema Resolvido
+## 🧱 Arquitetura
 
-Centraliza o controle de saldo e gerencia expectativas financeiras de forma clara, ajudando você a visualizar rapidamente o impacto de cada despesa ou receita no seu orçamento.
+Este backend segue um padrão baseado em `Actions`, com controllers de entrada em single action controller, DTOs de input e output e regras de negócio centralizadas nas actions.
 
-### 💡 Por que outro gerenciador de gastos?
+Módulos principais da API:
 
-A maioria dos aplicativos de controle financeiro sofrem de:
-- Interfaces excessivamente complicadas
-- Questões de segurança e privacidade duvidosas
-- Recursos "empurrados" que prejudicam a experiência
-- Complexidade que desmotiva o uso contínuo
+- `Auth`: registro e login
+- `Dashboard`: resumo financeiro, cards e listagem de despesas
+- `Expense`: criação, edição, exclusão, baixa e importação
+- `Category`: cadastro e manutenção de categorias
+- `Source`: gerenciamento de contas, carteiras e cartões
+- `CreditCard`: pagamento e estorno de faturas
 
-**Fillament Wallet** foi criado para resolver esses problemas, oferecendo apenas o necessário para um controle financeiro efetivo.
-
----
-
-## ✨ Principais Funcionalidades
-
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| 📝 **CRUD de Despesas** | Crie, edite, visualize e exclua suas transações financeiras |
-| 📊 **Relatórios Gerais** | Visualize resumos e análises dos seus gastos |
-| 📥 **Importação de Planilhas** | Importe seus dados de gastos via arquivo Excel/CSV |
-| 📤 **Exportação de Dados** | Exporte seus registros para análise externa |
-| 💵 **Controle de Saldo** | Acompanhe saldo atual e projeções futuras em tempo real |
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-Este projeto foi construído com tecnologias modernas e confiáveis:
-
-- **Laravel 13** - Framework PHP robusto e elegante
-- **Vite 7** - Build e assets do backend
-- **MySQL** - Banco de dados relacional via Docker
-- **Laravel Sail** - Infraestrutura local em containers
-- **Pest + PHPStan + Pint + Rector** - Testes, análise estática e padronização
-
-### Arquitetura
-
-- **Tipo**: API Laravel com assets via Vite
-- **Padrão**: DDD Lite (Domain-Driven Design simplificado)
-- **Stack**: Backend Laravel com frontend web separado no workspace
-
----
-
-## 🚀 Como Começar
+## 🚀 Como Executar
 
 ### Pré-requisitos
 
-Antes de iniciar, certifique-se de ter instalado:
-
-- [Docker](https://www.docker.com/get-started) (para Laravel Sail)
-- [Composer](https://getcomposer.org/) (gerenciador de dependências PHP)
-- [Node.js](https://nodejs.org/) (para instalar e compilar os assets)
+- Docker
+- Docker Compose
+- Composer
 
 ### Instalação
 
-1. **Clone o repositório**
-```bash
-git clone https://github.com/seu-usuario/fillament-wallet.git
-cd fillament-wallet/kado-backend
-```
+1. Clone o repositório e entre na pasta do backend.
+2. Instale as dependências PHP:
 
-2. **Instale as dependências PHP**
 ```bash
 composer install
 ```
 
-3. **Suba a infraestrutura Docker**
+1. Suba os containers:
+
 ```bash
 ./vendor/bin/sail up -d
 ```
 
-4. **Configure o projeto**
-```bash
-composer setup
-```
-
-5. **Inicie o ambiente de desenvolvimento**
-```bash
-composer dev
-```
-
-6. **Acesse a aplicação**
-```
-http://127.0.0.1:8000
-```
-
-> `composer setup` instala dependências PHP/Node, cria `.env` se necessário, gera a `APP_KEY`, roda as migrations e compila os assets.
-
-### Comandos Úteis
+1. Configure a aplicação:
 
 ```bash
-# Subir a infraestrutura Docker do backend
+./vendor/bin/sail composer setup
+```
+
+1. Inicie o backend:
+
+```bash
+./vendor/bin/sail composer dev
+```
+
+1. A API ficará disponível em:
+
+```text
+http://localhost
+```
+
+> O script `setup` cria o `.env` quando necessário, gera a `APP_KEY` e executa as migrations.
+
+## 🧪 Comandos Úteis
+
+```bash
 ./vendor/bin/sail up -d
-
-# Parar a infraestrutura Docker do backend
 ./vendor/bin/sail down
-
-# Rodar backend, fila, logs e Vite em desenvolvimento
-composer dev
-
-# Executar testes
-composer test
-
-# Rodar verificações de qualidade
-composer lint:all:check
-
-# Aplicar correções automáticas de estilo/análise
-composer lint:fix
-
-# Acessar o container
+./vendor/bin/sail composer test
+./vendor/bin/sail composer lint:all:check
+./vendor/bin/sail composer lint:fix
 ./vendor/bin/sail shell
 ```
 
----
+## 📌 Endpoints e Fluxos
 
-## 💡 Exemplo de Uso
+Principais rotas expostas pela API:
 
-### Caso de Uso Típico
+- `POST /api/register`
+- `POST /api/login`
+- `GET /api/dashboard/summary`
+- `GET /api/dashboard/expenses`
+- `GET /api/dashboard/spreadsheet/csv/export`
+- `GET /api/dashboard/spreadsheet/xlsx/export`
+- `POST /api/dashboard/spreadsheet/csv/import`
+- `POST /api/expenses`
+- `PUT /api/expenses/{id}`
+- `DELETE /api/expenses/{id}`
+- `POST /api/expenses/{id}/mark-as-paid`
+- `GET /api/categories`
+- `POST /api/categories`
+- `PUT /api/categories/{id}`
+- `GET /api/users/sources`
+- `GET /api/sources`
+- `POST /api/sources`
+- `PUT /api/sources/{id}`
+- `DELETE /api/sources/{id}`
+- `POST /api/credit-cards/statements/{statementId}/pay`
+- `POST /api/credit-cards/statements/{statementId}/undo-pay`
 
-1. **Cadastre uma despesa** (ex: "Compra no supermercado - R$ 150,00")
-2. **Visualize o impacto** no seu saldo atual e saldo projetado
-3. **Acompanhe** como suas entradas e saídas afetam seu orçamento
-4. **Exporte** relatórios quando precisar analisar seus gastos em detalhe
+## 📄 Observações
 
-A cada transação registrada, o sistema automaticamente atualiza:
-- Saldo atual
-- Saldo final projetado
-- Relatórios e gráficos
-
----
-
-## 🎨 Design
-
-O projeto segue um estilo **neo-brutalista**, priorizando:
-- Funcionalidade sobre ornamentação
-- Contraste e legibilidade
-- Elementos visuais diretos e honestos
-
----
-
-## 🧪 Testes
-
-O projeto conta com testes básicos para garantir a estabilidade das operações principais.
-
-```bash
-composer test
-```
-
-**Nota**: Como as operações são relativamente simples, a cobertura de testes é focada nos fluxos principais, sem necessidade de testes complexos.
-
----
-
-## 📈 Status do Projeto
-
-**Status Atual**: ✅ MVP em Produção
-
-O projeto está deployado e funcionando em ambiente de produção (VPS), pronto para uso real.
-
-### 🗺️ Roadmap
-
-Funcionalidades planejadas para as próximas versões:
-
-- [ ] Melhorar exportação de planilhas para melhor usabilidade
-- [ ] Implementar envio de relatórios semanais via email
-- [ ] Área de sugestões da comunidade
-- [ ] Dashboard com gráficos interativos
-- [ ] Categorização automática de gastos
-
----
-
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Este projeto aceita:
-
-- 💡 **Sugestões de melhorias**
-- 🐛 **Relatos de bugs**
-- 📝 **Melhorias na documentação**
-
-> **Em breve**: Uma área dedicada para sugestões da comunidade será implementada.
-
----
-
-## 🔗 Links
-
-- **Demo ao vivo**: [https://fillament-wallet.salgadinhos-web.blog](https://fillament-wallet.salgadinhos-web.blog)
-- **Documentação do Laravel**: [https://laravel.com/docs](https://laravel.com/docs)
+- O backend possui cobertura de testes para fluxos de autenticação, despesas, dashboard, exportação, importação e cartão de crédito.
+- O projeto usa autenticação por token e protege rotas privadas com `auth:sanctum`.
+- Há documentação e regras de desenvolvimento adicionais na pasta `AI/`.
