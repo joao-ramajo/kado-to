@@ -49,13 +49,13 @@
       ports:
         - "3307:3306"
       volumes:
-        - mysql_data_fillament:/var/lib/mysql
+        - mysql_prod_data_kado_to:/var/lib/mysql
       networks:
         - kado-network
       restart: unless-stopped
 
   volumes:
-    mysql_data_fillament:
+    mysql_prod_data_kado_to:
     app_public:
 
   networks:
