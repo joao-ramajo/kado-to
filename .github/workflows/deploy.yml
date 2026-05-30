@@ -26,7 +26,7 @@ jobs:
 
       - name: Stop services
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose down"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose -f docker-compose.prod.yaml down"
 
       - name: Sync code with main
         run: |
