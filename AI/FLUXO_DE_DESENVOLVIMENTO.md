@@ -1,5 +1,0 @@
-- toda rota deve ser criada junto de um controller de entrada com o metodo invoke seguindo single actions controllers
-- todo caso de uso deve ser feito atraves de uma classe Action com unico metodo publico sendo execute()
-- todo fluxo de caso de uso deve ter um input e output definidos
-- toda regra de négocio e execução deve estar centralizada em classes actions
-- controller deve apenas validar entrada e orquestrar fluxo

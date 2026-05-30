@@ -1,5 +1,0 @@
-- Todo log deve ter o padrão "[nome_da_classe] <mensagem>" sendo adicionado o nome da classe em snake case
-- logs devem ser feitos atraves da injeção de loggerinterface evitando o uso de métodos estáticos como facades
-- logs em consultas complexas devem armazenar o tempo ocorrido para a busca
-- deve ser feito logs para cada modulo dentro de um canal especifico para ele como "dashboard.log" ou referentes
-- a configuração de logs deve ser feita para armazenar os logs por ate 7 dias
