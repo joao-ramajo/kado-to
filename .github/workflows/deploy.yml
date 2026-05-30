@@ -22,24 +22,24 @@ jobs:
 
       - name: Mark repository as safe
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "git config --global --add safe.directory /var/www/filament-wallet"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "git config --global --add safe.directory /var/www/kado-to"
 
       - name: Stop services
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/filament-wallet && docker compose down"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose down"
 
       - name: Sync code with main
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/filament-wallet && git fetch origin main && git reset --hard FETCH_HEAD"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && git fetch origin main && git reset --hard FETCH_HEAD"
 
       - name: Start services
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/filament-wallet && docker compose -f docker-compose.prod.yaml up -d --build"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose -f docker-compose.prod.yaml up -d --build"
 
       - name: Wait for app healthcheck
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/filament-wallet && for i in 1 2 3 4 5 6 7 8 9 10; do status=\$(docker inspect --format='{{json .State.Health.Status}}' kado-api 2>/dev/null | tr -d '\"'); if [ \"\$status\" = \"healthy\" ]; then exit 0; fi; sleep 5; done; echo 'App container did not become healthy in time' && exit 1"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && for i in 1 2 3 4 5 6 7 8 9 10; do status=\$(docker inspect --format='{{json .State.Health.Status}}' kado-api 2>/dev/null | tr -d '\"'); if [ \"\$status\" = \"healthy\" ]; then exit 0; fi; sleep 5; done; echo 'App container did not become healthy in time' && exit 1"
 
       - name: Run migrations
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/filament-wallet && docker compose -f docker-compose.prod.yaml exec -T app php artisan migrate --force"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose -f docker-compose.prod.yaml exec -T app php artisan migrate --force"
