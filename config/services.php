@@ -39,7 +39,7 @@ return [
 
     'url' => [
         'dev' => 'http://localhost:8080',
-        'prod' => 'https://fillament-wallet.salgadinhos-web.blog',
+        'prod' => 'https://kado-po.salgadinhos-web.blog',
     ],
 
 ];
