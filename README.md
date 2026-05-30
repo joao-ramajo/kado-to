@@ -72,3 +72,13 @@ A API ficará disponível em `http://localhost`.
 ./vendor/bin/sail composer lint:fix       # corrige automaticamente
 ./vendor/bin/sail shell                   # acessa o container
 ```
+
+## Licença e uso
+
+Este projeto é público para fins de transparência, demonstração técnica e colaboração.
+
+O código-fonte é de direito restrito. Você pode visualizar o repositório, estudar a estrutura do projeto e propor melhorias por meio de issues ou pull requests.
+
+No entanto, não é permitido copiar, redistribuir, vender, republicar, usar comercialmente ou criar produtos derivados a partir deste código sem autorização prévia do autor.
+
+Pull requests são bem-vindos, desde que estejam alinhados com o objetivo do projeto. Ao contribuir, você concorda que sua contribuição poderá ser incorporada ao projeto sob os mesmos termos de uso deste repositório.
