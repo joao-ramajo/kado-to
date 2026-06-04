@@ -168,6 +168,46 @@ test('na listagem de despesas devo conseguir filtrar por categoria e mes', funct
     expect($ids)->toContain($pendingCreatedInMonth->id);
 });
 
+test('na listagem de despesas devo conseguir filtrar por fonte do usuario', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('test')->plainTextToken;
+    $defaultSourceId = $user->sources()->where('is_default', true)->value('id');
+    $secondarySource = Source::factory()->create([
+        'user_id' => $user->id,
+        'is_default' => false,
+    ]);
+
+    $expectedExpense = Expense::factory()->create([
+        'user_id' => $user->id,
+        'source_id' => $secondarySource->id,
+    ]);
+
+    Expense::factory()->create([
+        'user_id' => $user->id,
+        'source_id' => $defaultSourceId,
+    ]);
+
+    $response = $this->withHeader('Authorization', 'Bearer '.$token)
+        ->getJson(route('api.get-expenses', ['source_id' => $secondarySource->id]));
+
+    $response->assertOk()
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.id', $expectedExpense->id);
+});
+
+test('na listagem de despesas devo rejeitar fonte que nao pertence ao usuario', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('test')->plainTextToken;
+    $otherUser = User::factory()->create();
+    $otherSourceId = $otherUser->sources()->where('is_default', true)->value('id');
+
+    $response = $this->withHeader('Authorization', 'Bearer '.$token)
+        ->getJson(route('api.get-expenses', ['source_id' => $otherSourceId]));
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['source_id']);
+});
+
 test('quero lsitar todas as despesas pendentes', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('test')->plainTextToken;

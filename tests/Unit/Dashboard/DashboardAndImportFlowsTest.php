@@ -18,14 +18,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Psr\Log\LoggerInterface;
 
-test('get expenses filtra por query, categoria e mês útil do fluxo', function (): void {
+test('get expenses filtra por query, categoria, fonte e mês útil do fluxo', function (): void {
     $user = User::factory()->create();
     $defaultSourceId = $user->sources()->where('is_default', true)->value('id');
+    $secondarySource = Source::factory()->create(['user_id' => $user->id]);
     $category = Category::factory()->create(['user_id' => $user->id, 'name' => 'Transporte']);
 
     $expectedExpense = Expense::factory()->create([
         'user_id' => $user->id,
-        'source_id' => $defaultSourceId,
+        'source_id' => $secondarySource->id,
         'category_id' => $category->id,
         'title' => 'Uber - Centro',
         'type' => 'expense',
@@ -42,6 +43,18 @@ test('get expenses filtra por query, categoria e mês útil do fluxo', function 
         'status' => 'pending',
     ]);
 
+    Expense::factory()->create([
+        'user_id' => $user->id,
+        'source_id' => $defaultSourceId,
+        'category_id' => $category->id,
+        'title' => 'Uber - Bairro',
+        'type' => 'expense',
+        'status' => 'paid',
+        'payment_date' => '2026-05-03 10:00:00',
+        'created_at' => '2026-05-02 10:00:00',
+        'updated_at' => '2026-05-02 10:00:00',
+    ]);
+
     $logger = Mockery::mock(LoggerInterface::class);
     $logger->shouldReceive('info')->twice();
 
@@ -50,6 +63,7 @@ test('get expenses filtra por query, categoria e mês útil do fluxo', function 
         status: 'all',
         query: 'uber',
         categoryId: $category->id,
+        sourceId: $secondarySource->id,
         month: 5,
     ))->toArray();
 

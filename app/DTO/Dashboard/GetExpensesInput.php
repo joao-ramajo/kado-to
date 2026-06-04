@@ -11,6 +11,7 @@ readonly class GetExpensesInput
         public ?string $status,
         public ?string $query,
         public ?int $categoryId,
+        public ?int $sourceId,
         public ?int $month,
     ) {}
 }

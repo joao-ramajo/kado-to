@@ -29,6 +29,7 @@ class GetExpensesAction
             'status_filter' => $input->status,
             'query_filter' => $input->query,
             'category_id_filter' => $input->categoryId,
+            'source_id_filter' => $input->sourceId,
             'month_filter' => $input->month,
         ]);
 
@@ -46,6 +47,10 @@ class GetExpensesAction
 
         if ($input->categoryId !== null) {
             $query->where('expenses.category_id', $input->categoryId);
+        }
+
+        if ($input->sourceId !== null) {
+            $query->where('expenses.source_id', $input->sourceId);
         }
 
         if ($input->month !== null) {
@@ -134,6 +139,7 @@ class GetExpensesAction
         $this->logger->info($this->formatLogMessage('completed'), [
             'user_id' => $input->userId,
             'category_id_filter' => $input->categoryId,
+            'source_id_filter' => $input->sourceId,
             'month_filter' => $input->month,
             'count' => count($expenses),
             'query_time_ms' => (int) ((microtime(true) - $startedAt) * 1000),
