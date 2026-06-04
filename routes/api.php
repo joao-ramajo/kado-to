@@ -9,9 +9,7 @@ use App\Http\Controllers\CreditCard\UndoPayCreditCardStatementController;
 use App\Http\Controllers\Dashboard\GenerateExpenseCsv;
 use App\Http\Controllers\Dashboard\GenerateExpensesXlsx;
 use App\Http\Controllers\Dashboard\GetExpensesController;
-use App\Http\Controllers\Dashboard\GetSummaryCardsController;
 use App\Http\Controllers\Dashboard\GetSummaryController;
-use App\Http\Controllers\Dashboard\UpdateSummaryCardsController;
 use App\Http\Controllers\Expense\CreateCategoryController;
 use App\Http\Controllers\Expense\CreateExpenseController;
 use App\Http\Controllers\Expense\DeleteExpenseController;
@@ -75,10 +73,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('dashboard')->group(function (): void {
         Route::get('/summary', GetSummaryController::class)
             ->name('api.get-summary');
-        Route::get('/summary/cards', GetSummaryCardsController::class)
-            ->name('api.dashboard.summary-cards');
-        Route::put('/summary/cards', UpdateSummaryCardsController::class)
-            ->name('api.dashboard.summary-cards.update');
         Route::get('/expenses', GetExpensesController::class)
             ->name('api.get-expenses');
         Route::get('/spreadsheet/csv/export', GenerateExpenseCsv::class)
