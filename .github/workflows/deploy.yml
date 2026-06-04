@@ -10,50 +10,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Mark repository as safe
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "git config --global --add safe.directory /var/www/kado-to"
+
+      - name: Stop services
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose -f docker-compose.prod.yaml down"
+
       - name: Sync code with main
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/kado-to
-            git fetch origin main && git reset --hard FETCH_HEAD
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && git fetch origin main && git reset --hard FETCH_HEAD"
 
       - name: Start services
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/kado-to
-            docker compose -f docker-compose.prod.yaml up -d --build
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose -f docker-compose.prod.yaml up -d --build"
 
       - name: Wait for app healthcheck
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            for i in $(seq 1 10); do
-              status=$(docker inspect --format='{{json .State.Health.Status}}' kado-api 2>/dev/null | tr -d '"')
-              [ "$status" = "healthy" ] && exit 0
-              [ $i -eq 10 ] && echo "Container não ficou healthy a tempo" && exit 1
-              sleep 5
-            done
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && for i in 1 2 3 4 5 6 7 8 9 10; do status=\$(docker inspect --format='{{json .State.Health.Status}}' kado-api 2>/dev/null | tr -d '\"'); if [ \"\$status\" = \"healthy\" ]; then exit 0; fi; sleep 5; done; echo 'App container did not become healthy in time' && exit 1"
 
       - name: Run migrations
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /var/www/kado-to
-            docker compose -f docker-compose.prod.yaml exec -T app php artisan migrate --force
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /var/www/kado-to && docker compose -f docker-compose.prod.yaml exec -T app php artisan migrate --force"
