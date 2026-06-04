@@ -24,10 +24,7 @@ class GetExpensesRequest extends FormRequest
             'query' => ['nullable', 'string'],
             'category_id' => [
                 'nullable',
-                'integer',
-                Rule::exists('categories', 'id')->where(
-                    fn ($query) => $query->where('user_id', Auth::id())
-                ),
+                'integer'
             ],
             'source_id' => [
                 'nullable',
